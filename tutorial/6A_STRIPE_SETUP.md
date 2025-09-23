@@ -1,6 +1,6 @@
 # Tutorial 6A: Stripe Setup
 
-Before we can implement Stripe payments in our TaskApp, we need to set up our Stripe account and create all the necessary resources. This tutorial will walk through setting up everything we need in Stripe's test environment.
+Before we can implement Stripe payments in our BrickAI Property Hub, we need to set up our Stripe account and create all the necessary resources. This tutorial will walk through setting up everything we need in Stripe's test environment.
 
 ### Objectives
 

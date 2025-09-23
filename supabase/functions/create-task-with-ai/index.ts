@@ -7,21 +7,41 @@ import OpenAI from "npm:openai";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter((s) => s.length > 0);
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  const allow = origin && (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin));
+  return {
+    "Access-Control-Allow-Origin": allow ? origin : "null",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    Vary: "Origin",
+  } as Record<string, string>;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
   }
 
   try {
-    const { title, description } = await req.json();
+    const { title, description, portfolio_id } = await req.json();
+
+    // Basic input validation to reduce abuse
+    if (!title || typeof title !== "string" || title.length > 200) {
+      throw new Error("Invalid title");
+    }
+    if (description && (typeof description !== "string" || description.length > 2000)) {
+      throw new Error("Invalid description");
+    }
+    if (portfolio_id && typeof portfolio_id !== "string") {
+      throw new Error("Invalid portfolio_id");
+    }
 
     console.log("🔄 Creating task with AI suggestions...");
     const authHeader = req.headers.get("Authorization");
@@ -42,6 +62,18 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("No user found");
 
+    // Validate portfolio ownership if provided
+    if (portfolio_id) {
+      const { data: portfolio, error: portfolioError } = await supabaseClient
+        .from("portfolios")
+        .select("portfolio_id, user_id")
+        .eq("portfolio_id", portfolio_id)
+        .single();
+      if (portfolioError || !portfolio || portfolio.user_id !== user.id) {
+        throw new Error("Portfolio not found or not owned by user");
+      }
+    }
+
     // Create the task
     const { data, error } = await supabaseClient
       .from("tasks")
@@ -50,6 +82,7 @@ Deno.serve(async (req) => {
         description,
         completed: false,
         user_id: user.id,
+        portfolio_id: portfolio_id ?? null,
       })
       .select()
       .single();
@@ -92,16 +125,14 @@ Deno.serve(async (req) => {
     if (updateError) throw updateError;
 
     return new Response(JSON.stringify(updatedTask), {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { ...buildCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in create-task-with-ai:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = (error as any)?.message ?? String(error);
+    console.error("Error in create-task-with-ai:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...buildCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

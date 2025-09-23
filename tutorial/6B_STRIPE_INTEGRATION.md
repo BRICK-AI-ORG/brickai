@@ -1,6 +1,6 @@
 # Tutorial 6B: Stripe Integration
 
-This tutorial implements Stripe subscriptions in our TaskApp, building on the Stripe setup from Tutorial 6A. We'll create the database schema, implement edge functions for payment processing, and wire everything up to our frontend.
+This tutorial implements Stripe subscriptions in our BrickAI Property Hub, building on the Stripe setup from Tutorial 6A. We'll create the database schema, implement edge functions for payment processing, and wire everything up to our frontend.
 
 ## Apply Database Migrations
 

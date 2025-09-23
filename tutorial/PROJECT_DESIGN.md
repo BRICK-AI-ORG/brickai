@@ -1,6 +1,6 @@
-# Task App: Project Spec
+# BrickAI Property Hub: Project Spec
 
-TaskApp is a task management SaaS application built with Next.js and Supabase. It provides users with a clean interface to manage their tasks, complete with AI-powered task labeling and image attachments.
+BrickAI Property Hub is a SaaS application built with Next.js and Supabase. It provides users with a clean interface to manage their work, complete with AI-powered labeling and image attachments.
 
 ![image-task-app-architecture.png](images/image-task-app-architecture.png)
 

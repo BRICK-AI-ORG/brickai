@@ -48,6 +48,7 @@ export type Database = {
           image_url: string | null
           label: string | null
           rank: number | null
+          portfolio_id: string | null
           task_id: string
           title: string
           updated_at: string | null
@@ -61,6 +62,7 @@ export type Database = {
           image_url?: string | null
           label?: string | null
           rank?: number | null
+          portfolio_id?: string | null
           task_id?: string
           title: string
           updated_at?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           image_url?: string | null
           label?: string | null
           rank?: number | null
+          portfolio_id?: string | null
           task_id?: string
           title?: string
           updated_at?: string | null
@@ -82,6 +85,48 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "tasks_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["portfolio_id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          name: string
+          portfolio_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          name: string
+          portfolio_id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          name?: string
+          portfolio_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolios_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

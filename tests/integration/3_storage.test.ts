@@ -10,13 +10,13 @@ import path from "path";
 
 const TEST_USER_DAVID = {
   name: "David (Test User)",
-  email: "test-user.david@pixegami.io",
+  email: "test-user.david@example.com",
   password: "Test123!@#David",
 };
 
 const TEST_USER_DOMINIC = {
   name: "Dominic (Test User)",
-  email: "test-user.dominic@pixegami.io",
+  email: "test-user.dominic@example.com",
   password: "Test123!@#Dominic",
 };
 

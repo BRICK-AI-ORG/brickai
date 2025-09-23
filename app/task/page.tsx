@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/hooks/use-toast";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
+import { createBrowserClient } from "@supabase/ssr";
 
 function TaskForm() {
   const params = useSearchParams();
@@ -55,6 +56,12 @@ function TaskForm() {
   const { session } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const handleImageUpload = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -120,19 +127,45 @@ function TaskForm() {
     }
   };
 
+  // Generate a short-lived signed URL for private bucket access
+  const refreshSignedUrl = async () => {
+    if (task?.image_url) {
+      const { data, error } = await supabase.storage
+        .from("task-attachments")
+        .createSignedUrl(task.image_url, 60 * 10); // 10 minutes
+      if (!error) {
+        setSignedImageUrl(data.signedUrl);
+      } else {
+        setSignedImageUrl(null);
+      }
+    } else {
+      setSignedImageUrl(null);
+    }
+  };
+
+  // Refresh signed URL whenever image path changes
+  useEffect(() => {
+    refreshSignedUrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.image_url]);
+
   const renderImageDisplay = () => {
     return (
       <div className="space-y-2">
         <div className="relative w-40 h-40 rounded-lg overflow-hidden">
-          <Image
-            src={`${
-              process.env.NEXT_PUBLIC_SUPABASE_URL
-            }/storage/v1/object/public/task-attachments/${task!.image_url}`}
-            alt="Task attachment"
-            fill
-            sizes="160px"
-            className="object-cover"
-          />
+          {signedImageUrl ? (
+            <Image
+              src={signedImageUrl}
+              alt="Task attachment"
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-40 h-40 bg-gray-100 text-xs text-gray-500">
+              Loading image...
+            </div>
+          )}
         </div>
         <Button
           type="button"
@@ -262,10 +295,10 @@ function TaskForm() {
           </div>
         </div>
         <div className="flex space-x-2 w-full pt-4">
-          <Link href="/dashboard" className="flex-1">
+          <Link href="/home" className="flex-1">
             <Button type="button" variant="outline" className="w-full">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+              Back to Home
             </Button>
           </Link>
           <Button type="submit" className="flex-1">

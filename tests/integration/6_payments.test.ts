@@ -15,7 +15,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const WEBHOOK_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/stripe-webhook`;
 const TEST_USER_GREG = {
   name: "Greg (Test User)",
-  email: "test-user.greg@pixegami.io",
+  email: "test-user.greg@example.com",
   password: "Test123!@#Greg",
 };
 

@@ -14,6 +14,7 @@ body {
 
 @layer base {
   :root {
+    /* Keep light tokens intact for potential future toggle */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -41,7 +42,8 @@ body {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 240 10% 3.9%;
+    /* Ensure bg-background resolves to #121212 */
+    --background: 0 0% 7%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -72,7 +74,11 @@ body {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    @apply text-foreground;
+    /* Solid base + subtle vertical fade around #121212 */
+    background-color: #121212;
+    background-image: linear-gradient(to bottom, #161616, #121212 50%, #0f0f0f);
+    background-attachment: fixed;
   }
 }

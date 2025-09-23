@@ -69,7 +69,11 @@ Deno.serve(async (req) => {
     console.log("✅ Webhook processed successfully");
     return new Response(JSON.stringify({ received: true }));
   } catch (error) {
-    console.error("Error in stripe-webhook:", error.message);
-    return new Response(JSON.stringify({ error: error.message }));
+    const message = (error as any)?.message ?? String(error);
+    console.error("Error in stripe-webhook:", message);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 });

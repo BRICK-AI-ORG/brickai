@@ -67,7 +67,7 @@ curl -i --location \
 This should now work.
 
 ```text
-{"message":"Hello Pixegami!!"} ⏎    
+{"message":"Hello BrickAI!!"}
 ```
 
 ## Implementing Edge Function Logic (Partial)

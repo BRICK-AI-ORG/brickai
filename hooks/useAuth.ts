@@ -99,7 +99,7 @@ export function useAuth(): UseAuthReturn {
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
     } catch (error: any) {
@@ -114,7 +114,7 @@ export function useAuth(): UseAuthReturn {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+        options: { emailRedirectTo: `${window.location.origin}/login` },
       });
 
       if (error) {

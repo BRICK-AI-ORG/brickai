@@ -1,5 +1,5 @@
 {
-  "name": "task-app-project",
+  "name": "brickai-property-hub",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest"
+    "test": "jest",
+    "move:storage": "node scripts/move-storage-objects.mjs"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.1.2",
@@ -18,12 +19,12 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.2",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.10",
+    "@supabase/supabase-js": "^2.57.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.462.0",
-    "next": "14.2.16",
+    "next": "^14.2.32",
     "react": "^18",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18",

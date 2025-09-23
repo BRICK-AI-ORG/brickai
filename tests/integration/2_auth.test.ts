@@ -8,13 +8,13 @@ import {
 
 const TEST_USER_BOB = {
   name: "Bob (Test User)",
-  email: "test-user.bob@pixegami.io",
+  email: "test-user.bob@example.com",
   password: "Test123!@#Bob",
 };
 
 const TEST_USER_CHARLIE = {
   name: "Charlie (Test User)",
-  email: "test-user.charlie@pixegami.io",
+  email: "test-user.charlie@example.com",
   password: "Test123!@#Charlie",
 };
 

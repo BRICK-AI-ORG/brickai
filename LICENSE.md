@@ -27,4 +27,4 @@ No warranties are given. The license may not give you all of the permissions nec
 
 ## Commercial Use
 
-For commercial licensing, please contact pixegami@gmail.com.
+For commercial licensing, please contact the project maintainers.

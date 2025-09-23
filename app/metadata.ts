@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Task App",
-  description: "A simple task management application (tutorial).",
+  title: "BrickAI Property Hub",
+  description: "BrickAI Property Hub application (tutorial).",
   icons: {
     icon: [
       {

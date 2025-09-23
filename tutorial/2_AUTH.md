@@ -99,7 +99,7 @@ The RouteGuard itself defines some routing logic:
 
 - If the page is NOT a **public route** (`/`) then check if the user is authenticated.
 - If the user is NOT authenticated, re-direct to the **default public route** (the login page).
-- If the user IS authenticated, but is visiting the login page, just re-direct them immediately to the **default authenticated route** (which is the `/dashboard`).
+- If the user IS authenticated, but is visiting the login page, just re-direct them immediately to the **default authenticated route** (which is `/home`).
 
 Basically, force the user to the login page (index page) if they are not logged in. Otherwise, make the index page re-direct to the dashboard page.
 

@@ -1,6 +1,6 @@
-# Task App: Fullstack SaaS Project Tutorial 2025
+# BrickAI Property Hub: Fullstack SaaS Project Tutorial 2025
 
-A full-stack SaaS task management application built with Next.js and Supabase, featuring AI-powered task labeling, image attachments, and Stripe subscriptions.
+A full-stack SaaS application built with Next.js and Supabase, featuring AI-powered labeling, image attachments, and Stripe subscriptions.
 
 - Specific tutorial documents can be found in the `/tutorial` folder.
 - Project design and spec can be found at [tutorial/PROJECT_DESIGN.md](tutorial/PROJECT_DESIGN.md).
@@ -186,7 +186,7 @@ npm run dev
 ## Project Structure
 
 ```text
-taskapp/
+brickai/
 ├── app/               # Next.js pages and layouts
 ├── components/        # React components
 ├── hooks/             # Application logic
@@ -199,3 +199,9 @@ taskapp/
 └── tests/
     └── integration/   # Integration tests
 ```
+
+## Schema Conventions
+
+- This project models user ownership through `public.profiles`.
+- Application tables must reference `public.profiles(user_id)` — not `auth.users`.
+- See `docs/SCHEMA.md` for details, patterns, and RLS guidance.

@@ -3,8 +3,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { LogIn, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
-const LoginForm = () => {
+type Mode = "login" | "signup";
+
+const LoginForm = ({ mode = "login" }: { mode?: Mode }) => {
   const {
     email,
     password,
@@ -19,10 +22,11 @@ const LoginForm = () => {
     clearError,
   } = useAuth();
 
-  const toggleMode = () => {
-    setIsSignUpMode(!isSignUpMode);
+  // Ensure the UI matches the page's desired mode
+  useEffect(() => {
+    setIsSignUpMode(mode === "signup");
     clearError();
-  };
+  }, [mode, setIsSignUpMode, clearError]);
 
   return (
     <section aria-label={isSignUpMode ? "Sign Up Form" : "Login Form"}>
@@ -92,7 +96,10 @@ const LoginForm = () => {
           </form>
           <p className="text-center text-sm">
             {isSignUpMode ? "Already have an account?" : "New account?"}{" "}
-            <Link href="#" className="underline" onClick={toggleMode}>
+            <Link
+              href={isSignUpMode ? "/login" : "/create-account"}
+              className="underline"
+            >
               {isSignUpMode ? "Login" : "Sign up"}
             </Link>
           </p>

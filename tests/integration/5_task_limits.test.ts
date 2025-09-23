@@ -13,7 +13,7 @@ import {
 
 const TEST_USER_FRANK = {
   name: "Frank (Test User)",
-  email: "test-user.frank@pixegami.io",
+  email: "test-user.frank@example.com",
   password: "Test123!@#Frank",
 };
 

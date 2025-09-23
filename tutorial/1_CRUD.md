@@ -138,7 +138,7 @@ Run the development server (unless it's already running) and go to the dashboard
 npm run dev
 ```
 
-Go to http://localhost:3000/dashboard and play around with creating/updating tasks.
+Go to http://localhost:3000/home and play around with creating/updating tasks.
 
 On your Supabase dashboard, you should also now see your tables and your data: https://supabase.com/dashboard/project/[your-project-id]/editor
 
@@ -223,3 +223,4 @@ npm test tests/integration/1_task_crud.test.ts
 # Run a single specific test case.
 npm test tests/integration/1_task_crud.test.ts -- -t "can create a task"
 ```
+

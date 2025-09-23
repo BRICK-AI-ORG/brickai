@@ -25,7 +25,7 @@ You should now be able to see the app on http://localhost:3000. None of the func
 This is a rough breakdown of the current project structure.
 
 ```sh
-task-app-project
+brickai-property-hub
 ├── app  # Layout and Pages (JSX)
 ├── components  # UI Components
 ├── hooks  # App Logic Hooks

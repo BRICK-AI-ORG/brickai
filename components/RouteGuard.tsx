@@ -3,9 +3,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 
-const PUBLIC_ROUTES = ["/"];
-const DEFAULT_AUTHENTICATED_ROUTE = "/dashboard";
-const DEFAULT_PUBLIC_ROUTE = "/";
+const PUBLIC_ROUTES = ["/", "/login", "/create-account"];
+const DEFAULT_AUTHENTICATED_ROUTE = "/home";
+const DEFAULT_PUBLIC_ROUTE = "/login";
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isLoading } = useAuth();
@@ -18,7 +18,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
 
     const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
-    if (isLoggedIn && pathname === DEFAULT_PUBLIC_ROUTE) {
+    if (isLoggedIn && (pathname === "/" || pathname === DEFAULT_PUBLIC_ROUTE)) {
       router.replace(DEFAULT_AUTHENTICATED_ROUTE);
     } else if (!isLoggedIn && !isPublicRoute) {
       router.replace(DEFAULT_PUBLIC_ROUTE);

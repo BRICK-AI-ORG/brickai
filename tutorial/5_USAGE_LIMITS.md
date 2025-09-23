@@ -107,7 +107,7 @@ Then just go and log in using the test user's credential.
 
 ```tsx
 const TEST_USER_FRANK = {
-  email: "test-user.frank@pixegami.io",
+  email: "test-user.frank@example.com",
   password: "Test123!@#Frank",
 };
 ```
