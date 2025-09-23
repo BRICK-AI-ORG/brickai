@@ -8,7 +8,8 @@ const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const STRIPE_PRICE_ID = Deno.env.get("STRIPE_PRICE_ID");
 const APP_URL = Deno.env.get("APP_URL") ?? "http://localhost:3000";
-const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+const DEFAULT_ORIGIN = Deno.env.get("APP_URL") ?? "http://localhost:3000";
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? DEFAULT_ORIGIN)
   .split(",")
   .map((s) => s.trim())
   .filter((s) => s.length > 0);
@@ -19,7 +20,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 
 function buildCorsHeaders(req: Request) {
   const origin = req.headers.get("origin") ?? "";
-  const allow = origin && (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin));
+  const allow = origin && ALLOWED_ORIGINS.includes(origin);
   return {
     "Access-Control-Allow-Origin": allow ? origin : "null",
     "Access-Control-Allow-Headers":
@@ -32,6 +33,14 @@ function buildCorsHeaders(req: Request) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+  }
+  // Enforce CORS allow-list for non-OPTIONS requests
+  const origin = req.headers.get("origin") ?? "";
+  if (!(origin && ALLOWED_ORIGINS.includes(origin))) {
+    return new Response(JSON.stringify({ error: "Origin not allowed" }), {
+      status: 403,
+      headers: { ...buildCorsHeaders(req), "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -110,4 +119,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-

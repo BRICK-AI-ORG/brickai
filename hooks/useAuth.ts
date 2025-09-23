@@ -87,7 +87,6 @@ export function useAuth(): UseAuthReturn {
         password,
       });
       if (error) setError(error.message);
-      console.log("✅ User logged in:", email, user);
     } catch (error: any) {
       setError(error.message);
       console.error("Error logging in:", error);

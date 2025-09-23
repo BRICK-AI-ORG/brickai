@@ -74,13 +74,22 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
       const taskData = taskToSave || task;
       if (!taskData) throw new Error("No task data to save");
 
+      const safeUpdate: Partial<Task> & { due_date?: string; updated_at: string } = {
+        title: taskData.title,
+        description: taskData.description,
+        completed: taskData.completed ?? false,
+        label: (taskData as any).label,
+        // Allow image_url to be updated via internal flows (upload/remove)
+        image_url: (taskToSave as any)?.image_url ?? task?.image_url ?? null,
+        // Preserve association if provided (no user_id changes)
+        portfolio_id: (taskData as any).portfolio_id ?? null,
+        due_date: date?.toISOString().split("T")[0],
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from("tasks")
-        .update({
-          ...taskData,
-          due_date: date?.toISOString().split("T")[0],
-          updated_at: new Date().toISOString(),
-        })
+        .update(safeUpdate)
         .eq("task_id", taskData.task_id);
 
       if (error) throw error;

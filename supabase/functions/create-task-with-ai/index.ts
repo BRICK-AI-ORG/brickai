@@ -7,14 +7,15 @@ import OpenAI from "npm:openai";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+// Restrict CORS to explicit allow-list (defaults to localhost for dev)
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "http://localhost:3000")
   .split(",")
   .map((s) => s.trim())
   .filter((s) => s.length > 0);
 
 function buildCorsHeaders(req: Request) {
   const origin = req.headers.get("origin") ?? "";
-  const allow = origin && (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin));
+  const allow = origin && ALLOWED_ORIGINS.includes(origin);
   return {
     "Access-Control-Allow-Origin": allow ? origin : "null",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -27,6 +28,14 @@ function buildCorsHeaders(req: Request) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+  }
+  // Enforce CORS allow-list for non-OPTIONS requests
+  const origin = req.headers.get("origin") ?? "";
+  if (!(origin && ALLOWED_ORIGINS.includes(origin))) {
+    return new Response(JSON.stringify({ error: "Origin not allowed" }), {
+      status: 403,
+      headers: { ...buildCorsHeaders(req), "Content-Type": "application/json" },
+    });
   }
 
   try {
