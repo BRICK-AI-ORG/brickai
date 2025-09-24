@@ -18,15 +18,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isLanding = pathname === "/home";
+  const wideRoutes = new Set(["/home", "/pricing"]);
+  const isWide = pathname ? wideRoutes.has(pathname) : false;
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-[#121212]`}>
         <TitleSetter />
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {isLanding ? (
+          <main
+            className={
+              isWide
+                ? "flex-grow mx-auto max-w-screen-2xl px-2 sm:px-4 py-8"
+                : "flex-grow container mx-auto px-4 py-8"
+            }
+          >
+            {isWide ? (
               <RouteGuard>{children}</RouteGuard>
             ) : (
               <Card className="w-full max-w-2xl mx-auto">

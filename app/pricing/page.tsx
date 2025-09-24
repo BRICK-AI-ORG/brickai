@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 export default function PricingPage() {
   return (
     <section className="py-16">
-      <div className="mx-auto w-[95%]">
+      <div className="mx-auto max-w-screen-2xl px-2 sm:px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Pricing</h1>
           <p className="mt-4 text-muted-foreground">
@@ -13,7 +13,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-xl">Basic</CardTitle>
