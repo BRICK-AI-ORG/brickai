@@ -67,7 +67,7 @@ export default function Dashboard() {
           ))}
         </div>
       ) : (
-        <div className="border rounded-md p-8 text-center">
+        <div className="bg-card border rounded-md p-8 text-center">
           <ClipboardList className="mx-auto h-8 w-8 text-gray-400 mb-4" />
           <p className="text-gray-500">Create a portfolio to get started.</p>
         </div>
@@ -75,4 +75,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function RootRedirect() {
-  redirect("/login");
+  // Send base URL to the public landing page
+  redirect("/home");
 }

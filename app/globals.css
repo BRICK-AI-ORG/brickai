@@ -45,9 +45,10 @@ body {
     /* Ensure bg-background resolves to #121212 */
     --background: 0 0% 7%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    /* Boxes/surfaces on top of background */
+    --card: 0 0% 9%; /* #171717 */
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+    --popover: 0 0% 9%; /* #171717 */
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 240 5.9% 10%;

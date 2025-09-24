@@ -3,7 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 
-const PUBLIC_ROUTES = ["/", "/login", "/create-account"];
+const PUBLIC_ROUTES = ["/", "/home", "/login", "/create-account", "/pricing"];
 const DEFAULT_AUTHENTICATED_ROUTE = "/home";
 const DEFAULT_PUBLIC_ROUTE = "/login";
 

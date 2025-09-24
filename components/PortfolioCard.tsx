@@ -36,7 +36,7 @@ export function PortfolioCard({
   };
 
   return (
-    <div className="border rounded-md p-4 space-y-4">
+    <div className="bg-card border rounded-md p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">{portfolio.name}</h2>
@@ -60,7 +60,7 @@ export function PortfolioCard({
           </DialogContent>
         </Dialog>
       </div>
-      <div className="border rounded-md">
+      <div className="bg-card border rounded-md">
         <TaskList
           tasks={tasks}
           onDelete={onDeleteTask}
@@ -70,4 +70,3 @@ export function PortfolioCard({
     </div>
   );
 }
-
