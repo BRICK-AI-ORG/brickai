@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Flame } from "lucide-react";
 import TiltCard from "@/components/ui/tilt-card";
+import TeamParticles from "@/components/TeamParticles";
 
 export default function PricingPage() {
   return (
@@ -39,7 +40,7 @@ export default function PricingPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full flex flex-col border-[#aa2ee2]/40">
+            <Card className="h-full flex flex-col border-[#aa2ee2]/40 transition-all duration-200 hover:border-[#aa2ee2]/70 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.6)_inset,0_12px_35px_-10px_rgba(170,46,226,0.45)]">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-xl">Growth</CardTitle>
@@ -67,7 +68,8 @@ export default function PricingPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full flex flex-col border-[#ff7700]/40">
+            <Card className="group relative overflow-hidden h-full flex flex-col border-[#ff7700]/40 transition-all duration-200 hover:border-[#ff7700]/70 hover:shadow-[0_0_0_1px_rgba(255,119,0,0.6)_inset,0_12px_35px_-10px_rgba(255,119,0,0.45)]">
+              <TeamParticles scheme="orange" className="opacity-20 group-hover:opacity-95" />
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-xl">Pro</CardTitle>
@@ -95,7 +97,7 @@ export default function PricingPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full flex flex-col">
+            <Card className="group relative overflow-hidden h-full flex flex-col border-[#22d3ee]/40 transition-all duration-200 hover:border-[#22d3ee]/70 hover:shadow-[0_0_0_1px_rgba(34,211,238,0.6)_inset,0_12px_35px_-10px_rgba(34,211,238,0.45)]">
               <CardHeader>
                 <CardTitle className="text-xl">Team</CardTitle>
                 <div className="text-2xl font-bold">Contact Us</div>
@@ -121,7 +123,8 @@ export default function PricingPage() {
 
       <div className="mt-12 flex justify-center">
         <TiltCard intensity={4} glareOpacity={0.06} className="w-full max-w-3xl sm:max-w-4xl">
-          <div className="rounded-xl border p-6 sm:p-8 bg-background/60 text-center">
+          <div className="relative overflow-hidden rounded-xl border p-6 sm:p-8 bg-background/60 text-center group">
+          <div aria-hidden className="pricing-smoke pointer-events-none absolute -inset-24 opacity-25 group-hover:opacity-40"></div>
           <h2 className="text-2xl font-semibold">Add-Ons (all tiers)</h2>
             <ul className="mt-4 space-y-2 text-sm sm:text-base text-left">
               <li>Extra portfolio (beyond included cap)  &pound;15 / month each</li>

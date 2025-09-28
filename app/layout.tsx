@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const wideRoutes = new Set(["/home", "/pricing"]);
+  const wideRoutes = new Set(["/home", "/pricing", "/solutions", "/about"]);
   const isWide = pathname ? wideRoutes.has(pathname) : false;
   return (
     <html lang="en" className="dark">

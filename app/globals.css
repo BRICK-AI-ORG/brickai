@@ -83,3 +83,139 @@ body {
     background-attachment: fixed;
   }
 }
+
+/* About page carousels */
+.animate-marquee-x {
+  animation: marquee-x 28s linear infinite;
+}
+.animate-marquee-y {
+  animation: marquee-y 24s linear infinite;
+}
+.pause-on-hover:hover .animate-marquee-x,
+.pause-on-hover:hover .animate-marquee-y {
+  animation-play-state: paused;
+}
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marquee-y {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+/* Animated smoky gradient for pricing add-ons panel */
+.pricing-smoke {
+  background:
+    radial-gradient(600px circle at 30% 20%, rgba(170,46,226,0.25), transparent 40%),
+    radial-gradient(600px circle at 70% 60%, rgba(34,211,238,0.22), transparent 45%),
+    radial-gradient(400px circle at 80% 10%, rgba(170,46,226,0.18), transparent 40%),
+    radial-gradient(400px circle at 20% 80%, rgba(34,211,238,0.18), transparent 40%);
+  filter: blur(24px);
+  animation: pricing-smoke-shift 18s ease-in-out infinite alternate;
+  transition: opacity 200ms ease;
+}
+@keyframes pricing-smoke-shift {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  50%  { transform: translate3d(-2%, 2%, 0) scale(1.03); }
+  100% { transform: translate3d(2%, -2%, 0) scale(1.06); }
+}
+
+/* About hero smoky overlay */
+.about-smoke {
+  background:
+    radial-gradient(700px circle at 25% 15%, rgba(170,46,226,0.28), transparent 45%),
+    radial-gradient(650px circle at 75% 70%, rgba(34,211,238,0.24), transparent 45%),
+    radial-gradient(500px circle at 85% 20%, rgba(170,46,226,0.18), transparent 50%),
+    radial-gradient(500px circle at 15% 85%, rgba(34,211,238,0.18), transparent 50%);
+  filter: blur(28px);
+  animation: pricing-smoke-shift 22s ease-in-out infinite alternate;
+}
+
+/* Shared card glow background for hover */
+.card-blend-bg {
+  background:
+    radial-gradient(500px circle at 30% 30%, rgba(170,46,226,0.25), transparent 45%),
+    radial-gradient(500px circle at 70% 70%, rgba(34,211,238,0.22), transparent 45%);
+  filter: blur(22px);
+  transition: opacity 200ms ease;
+}
+
+/* Team plan particle overlay */
+.team-particles {
+  position: absolute;
+  inset: -8px;
+  z-index: 1; /* stay above button/content but pointer-events none keeps clicks */
+  mix-blend-mode: screen;
+  pointer-events: none;
+  filter: brightness(1);
+  opacity: 0.24;
+  transition: opacity 200ms ease, filter 200ms ease;
+  /* Denser field of smaller cyan/blue dots */
+  background:
+    radial-gradient(4px 4px at 6% 18%, rgba(34,211,238,0.38), transparent 60%),
+    radial-gradient(3px 3px at 10% 30%, rgba(59,130,246,0.26), transparent 55%),
+    radial-gradient(4px 4px at 14% 42%, rgba(34,211,238,0.34), transparent 60%),
+    radial-gradient(3px 3px at 18% 58%, rgba(59,130,246,0.24), transparent 55%),
+    radial-gradient(4px 4px at 22% 30%, rgba(34,211,238,0.36), transparent 60%),
+    radial-gradient(3px 3px at 26% 66%, rgba(59,130,246,0.24), transparent 55%),
+    radial-gradient(4px 4px at 31% 24%, rgba(34,211,238,0.32), transparent 60%),
+    radial-gradient(3px 3px at 37% 50%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 43% 20%, rgba(34,211,238,0.3), transparent 60%),
+    radial-gradient(3px 3px at 49% 46%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 55% 26%, rgba(34,211,238,0.3), transparent 60%),
+    radial-gradient(3px 3px at 61% 58%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 66% 20%, rgba(34,211,238,0.28), transparent 60%),
+    radial-gradient(3px 3px at 71% 44%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 76% 32%, rgba(34,211,238,0.3), transparent 60%),
+    radial-gradient(3px 3px at 81% 58%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 86% 24%, rgba(34,211,238,0.28), transparent 60%),
+    radial-gradient(3px 3px at 90% 52%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 12% 78%, rgba(34,211,238,0.28), transparent 60%),
+    radial-gradient(3px 3px at 26% 82%, rgba(59,130,246,0.2), transparent 55%),
+    radial-gradient(4px 4px at 48% 86%, rgba(34,211,238,0.26), transparent 60%),
+    radial-gradient(3px 3px at 64% 90%, rgba(59,130,246,0.2), transparent 55%),
+    radial-gradient(4px 4px at 74% 86%, rgba(34,211,238,0.24), transparent 60%);
+  animation: team-particles-wander 9s ease-in-out infinite alternate;
+}
+.team-particles::before,
+.team-particles::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+.    radial-gradient(4px 4px at 18% 12%, rgba(34,211,238,0.35), transparent 60%),
+    radial-gradient(3px 3px at 32% 36%, rgba(59,130,246,0.25), transparent 55%),
+    radial-gradient(4px 4px at 48% 18%, rgba(34,211,238,0.33), transparent 60%),
+    radial-gradient(3px 3px at 62% 42%, rgba(59,130,246,0.24), transparent 55%),
+    radial-gradient(4px 4px at 78% 24%, rgba(34,211,238,0.32), transparent 60%),
+    radial-gradient(3px 3px at 88% 46%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 8% 60%, rgba(34,211,238,0.3), transparent 60%),
+    radial-gradient(3px 3px at 28% 74%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(4px 4px at 56% 68%, rgba(34,211,238,0.3), transparent 60%),
+    radial-gradient(3px 3px at 84% 80%, rgba(59,130,246,0.2), transparent 55%);
+}
+.team-particles::before { animation: team-particles-drift 12s linear infinite; }
+.team-particles::after  { animation: team-particles-orbit 14s ease-in-out infinite alternate; }
+.group:hover .team-particles { opacity: 0.48; filter: brightness(1.6); }
+.group:hover .team-particles::before,
+.group:hover .team-particles::after { opacity: 0.28; }
+@keyframes team-particles-wander {
+  0%   { transform: translate3d(0,0,0) rotate(0.5deg) scale(1); }
+  50%  { transform: translate3d(-3%, 3%, 0) rotate(-0.75deg) scale(1.03); }
+  100% { transform: translate3d(3%, -3%, 0) rotate(0.75deg) scale(1.05); }
+}
+@keyframes team-particles-drift {
+  0%   { transform: translate3d(0,0,0) rotate(0deg); }
+  50%  { transform: translate3d(3%, -1.5%, 0) rotate(1.5deg); }
+  100% { transform: translate3d(-3%, 1.5%, 0) rotate(-1.5deg); }
+}
+@keyframes team-particles-orbit {
+  0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  33%  { transform: translate3d(-1.5%, 1.5%, 0) rotate(2deg) scale(1.04); }
+  66%  { transform: translate3d(1.5%, -1.5%, 0) rotate(-2deg) scale(1.03); }
+  100% { transform: translate3d(0.75%, -0.75%, 0) rotate(0deg) scale(1.04); }
+}
