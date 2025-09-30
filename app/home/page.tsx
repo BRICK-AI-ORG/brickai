@@ -14,8 +14,32 @@ import {
   Sparkles,
 } from "lucide-react";
 import TiltCard from "@/components/ui/tilt-card";
+import React from "react";
 
 export default function HomePage() {
+  const eqGridRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const root = eqGridRef.current;
+    if (!root) return;
+    const items = Array.from(root.querySelectorAll<HTMLElement>("[data-eq-card]"));
+    if (items.length === 0) return;
+
+    const apply = () => {
+      items.forEach((el) => (el.style.height = "auto"));
+      const maxH = Math.max(...items.map((el) => el.offsetHeight));
+      items.forEach((el) => (el.style.height = `${maxH}px`));
+    };
+
+    const ro = new ResizeObserver(apply);
+    items.forEach((el) => ro.observe(el));
+    window.addEventListener("resize", apply);
+    apply();
+    return () => {
+      window.removeEventListener("resize", apply);
+      ro.disconnect();
+    };
+  }, []);
   return (
     <>
       {/* Content */}
@@ -52,8 +76,9 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <Bot className="h-4 w-4 text-[#aa2ee2]" /> AI Tasks & Automations
                 </div>
@@ -61,8 +86,9 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <Building2 className="h-4 w-4 text-[#aa2ee2]" /> Portfolio Management
                 </div>
@@ -70,8 +96,9 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <FileText className="h-4 w-4 text-[#aa2ee2]" /> Documents & Media
                 </div>
@@ -79,8 +106,9 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <Users className="h-4 w-4 text-[#aa2ee2]" /> Collaboration
                 </div>
@@ -88,8 +116,9 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <Plug className="h-4 w-4 text-[#aa2ee2]" /> Integrations
                 </div>
@@ -97,8 +126,9 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            <TiltCard intensity={6} glareOpacity={0.08}>
-              <div className="rounded-xl border p-5 bg-background/60">
+            <TiltCard intensity={4} glareOpacity={0.06}>
+              <div className="group relative overflow-hidden rounded-xl border p-5 bg-background/60 h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <div className="flex items-center gap-2 font-semibold">
                   <ShieldCheck className="h-4 w-4 text-[#aa2ee2]" /> Security
                 </div>
@@ -116,10 +146,10 @@ export default function HomePage() {
             <p className="mt-3 text-muted-foreground">Model returns, manage pipeline, and surface insights with responsive visuals.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div ref={eqGridRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Portfolio Modelling */}
             <TiltCard intensity={10} glareOpacity={0.1}>
-              <div className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60">
+              <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
                     <LineChart className="h-7 w-7 text-[#aa2ee2]" />
@@ -144,8 +174,8 @@ export default function HomePage() {
             </TiltCard>
 
             {/* Property / Homes */}
-            <TiltCard intensity={10} glareOpacity={0.1}>
-              <div className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60">
+            <TiltCard intensity={10} glareOpacity={0}>
+              <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
                     <Home className="h-7 w-7 text-[#aa2ee2]" />
@@ -166,7 +196,7 @@ export default function HomePage() {
                   className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                   style={{
                     background:
-                      "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.10), transparent 50%)",
+                      "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(34,211,238,0.12), transparent 50%)",
                   }}
                 />
               </div>
@@ -174,7 +204,7 @@ export default function HomePage() {
 
             {/* AI Insights */}
             <TiltCard intensity={10} glareOpacity={0.1}>
-              <div className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60">
+              <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
                     <Sparkles className="h-7 w-7 text-[#aa2ee2]" />
@@ -199,8 +229,8 @@ export default function HomePage() {
             </TiltCard>
 
             {/* Data Integrations */}
-            <TiltCard intensity={10} glareOpacity={0.1}>
-              <div className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60">
+            <TiltCard intensity={10} glareOpacity={0}>
+              <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
                     <Plug className="h-7 w-7 text-[#aa2ee2]" />
@@ -218,7 +248,7 @@ export default function HomePage() {
                   className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                   style={{
                     background:
-                      "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.08), transparent 50%)",
+                      "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(34,211,238,0.10), transparent 50%)",
                   }}
                 />
               </div>
