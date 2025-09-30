@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 const Footer = () => {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-[#171717] text-white border-t border-white/10 mt-8">
+    <footer className="relative z-10 bg-[#171717] text-white border-t border-white/10 mt-0">
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand + CTA */}

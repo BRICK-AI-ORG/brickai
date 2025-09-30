@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SmokyBG from "@/components/SmokyBG";
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
 import TitleSetter from "@/components/TitleSetter";
@@ -24,13 +25,28 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-[#121212]`}>
         <TitleSetter />
-        <div className="flex flex-col min-h-screen">
+        <div className="relative isolate flex flex-col min-h-screen">
+          {/* Full-viewport smoke background for /home only */}
+          {pathname === "/home" && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              <SmokyBG
+                className="absolute inset-0"
+                speed={1.8}
+                blobs={5}
+                minR={0.08}
+                maxR={0.18}
+                blurPx={40}
+                opacity={0.28}
+                centerAlpha={0.4}
+              />
+            </div>
+          )}
           <Header />
           <main
             className={
               isWide
-                ? `flex-grow mx-auto max-w-screen-2xl px-2 sm:px-4 ${yPad}`
-                : `flex-grow container mx-auto px-4 ${yPad}`
+                ? `relative z-10 flex-grow mx-auto max-w-screen-2xl px-2 sm:px-4 ${yPad}`
+                : `relative z-10 flex-grow container mx-auto px-4 ${yPad}`
             }
           >
             {isWide ? (

@@ -32,7 +32,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const closeMobile = () => setMobileOpen(false);
   return (
-    <header className="bg-[#171717] text-white">
+    <header className="relative z-10 bg-[#171717] text-white">
       <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link href={"/home"} className="flex items-center gap-3 text-xl font-bold min-w-0">
