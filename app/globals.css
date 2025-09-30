@@ -129,7 +129,28 @@ body {
     radial-gradient(500px circle at 85% 20%, rgba(170,46,226,0.18), transparent 50%),
     radial-gradient(500px circle at 15% 85%, rgba(34,211,238,0.18), transparent 50%);
   filter: blur(28px);
-  animation: pricing-smoke-shift 22s ease-in-out infinite alternate;
+  animation: about-smoke-shift-1 28s ease-in-out infinite alternate;
+}
+
+.about-smoke-2 {
+  background:
+    radial-gradient(600px circle at 20% 25%, rgba(170,46,226,0.22), transparent 45%),
+    radial-gradient(580px circle at 80% 65%, rgba(34,211,238,0.20), transparent 45%),
+    radial-gradient(450px circle at 75% 20%, rgba(170,46,226,0.16), transparent 50%),
+    radial-gradient(420px circle at 25% 80%, rgba(34,211,238,0.16), transparent 50%);
+  filter: blur(36px);
+  animation: about-smoke-shift-2 34s ease-in-out infinite alternate;
+}
+
+@keyframes about-smoke-shift-1 {
+  0%   { transform: translate3d(0,0,0) scale(1) rotate(0.4deg); }
+  50%  { transform: translate3d(-2%, 2%, 0) scale(1.03) rotate(-0.6deg); }
+  100% { transform: translate3d(2%, -2%, 0) scale(1.05) rotate(0.4deg); }
+}
+@keyframes about-smoke-shift-2 {
+  0%   { transform: translate3d(0,0,0) scale(1) rotate(-0.3deg); }
+  50%  { transform: translate3d(1.6%, -1.6%, 0) scale(1.02) rotate(0.45deg); }
+  100% { transform: translate3d(-1.6%, 1.6%, 0) scale(1.03) rotate(-0.3deg); }
 }
 
 /* Shared card glow background for hover */
@@ -139,6 +160,27 @@ body {
     radial-gradient(500px circle at 70% 70%, rgba(34,211,238,0.22), transparent 45%);
   filter: blur(22px);
   transition: opacity 200ms ease;
+}
+
+/* Minimal, custom scrollbar for scrollable policy boxes */
+.scrollbox {
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: rgba(170,46,226,0.35) transparent;
+}
+.scrollbox::-webkit-scrollbar {       /* WebKit */
+  width: 8px;
+}
+.scrollbox::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbox::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(170,46,226,0.45), rgba(34,211,238,0.35));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.scrollbox::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(170,46,226,0.65), rgba(34,211,238,0.5));
 }
 
 /* Team plan particle overlay */
@@ -218,4 +260,14 @@ body {
   33%  { transform: translate3d(-1.5%, 1.5%, 0) rotate(2deg) scale(1.04); }
   66%  { transform: translate3d(1.5%, -1.5%, 0) rotate(-2deg) scale(1.03); }
   100% { transform: translate3d(0.75%, -0.75%, 0) rotate(0deg) scale(1.04); }
+}
+
+/* Faint wave lines pan (used by Team card overlay) */
+.animate-wave-pan {
+  animation: wave-pan 26s ease-in-out infinite alternate;
+}
+@keyframes wave-pan {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(-2%, 0, 0); }
+  100% { transform: translate3d(2%, 0, 0); }
 }

@@ -11,6 +11,11 @@ const PUBLIC_ROUTES = [
   "/pricing",
   "/solutions",
   "/about",
+  "/faqs",
+  "/terms-and-conditions",
+  "/privacy-policy",
+  "/cookie-policy",
+  "/contact",
 ];
 const DEFAULT_AUTHENTICATED_ROUTE = "/home";
 const DEFAULT_PUBLIC_ROUTE = "/login";

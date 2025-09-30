@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Users, Flame } from "lucide-react";
 import TiltCard from "@/components/ui/tilt-card";
 import TeamParticles from "@/components/TeamParticles";
+import WaveLines from "@/components/WaveLines";
 
 export default function PricingPage() {
   return (
@@ -18,7 +19,8 @@ export default function PricingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full flex flex-col">
+            <Card className="group relative overflow-hidden h-full flex flex-col border-[#aa2ee2]/20 transition-all duration-200 hover:border-[#aa2ee2]/50 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.25)_inset,0_10px_24px_-14px_rgba(170,46,226,0.25)]">
+              <TeamParticles scheme="violet" density={0.25} className="opacity-5 group-hover:opacity-20" />
               <CardHeader>
                 <CardTitle className="text-xl">Starter</CardTitle>
                 <div className="text-2xl font-bold">&pound;32/month</div>
@@ -33,14 +35,15 @@ export default function PricingPage() {
               </CardContent>
               <CardFooter className="mt-auto justify-center">
                 <Link href="/create-account" aria-label="Enter - Starter">
-                  <Button variant="outline">Enter</Button>
+                  <Button variant="outline" className="hover:border-[#aa2ee2]/60 hover:text-[#aa2ee2]">Enter</Button>
                 </Link>
               </CardFooter>
             </Card>
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full flex flex-col border-[#aa2ee2]/40 transition-all duration-200 hover:border-[#aa2ee2]/70 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.6)_inset,0_12px_35px_-10px_rgba(170,46,226,0.45)]">
+            <Card className="group relative overflow-hidden h-full flex flex-col border-[#aa2ee2]/40 transition-all duration-200 hover:border-[#aa2ee2]/70 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.6)_inset,0_12px_35px_-10px_rgba(170,46,226,0.45)]">
+              <TeamParticles scheme="violet" density={0.5} className="opacity-10 group-hover:opacity-30" />
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-xl">Growth</CardTitle>
@@ -98,6 +101,7 @@ export default function PricingPage() {
 
           <TiltCard intensity={4} glareOpacity={0.06}>
             <Card className="group relative overflow-hidden h-full flex flex-col border-[#22d3ee]/40 transition-all duration-200 hover:border-[#22d3ee]/70 hover:shadow-[0_0_0_1px_rgba(34,211,238,0.6)_inset,0_12px_35px_-10px_rgba(34,211,238,0.45)]">
+              <WaveLines className="opacity-25 group-hover:opacity-50" />
               <CardHeader>
                 <CardTitle className="text-xl">Team</CardTitle>
                 <div className="text-2xl font-bold">Contact Us</div>
@@ -113,7 +117,7 @@ export default function PricingPage() {
               </CardContent>
               <CardFooter className="mt-auto justify-center">
                 <Link href="/create-account" aria-label="Coming Soon - Team">
-                  <Button variant="secondary">Coming Soon</Button>
+                  <Button className="bg-[#22d3ee] hover:bg-[#1bb8d0]">Coming Soon</Button>
                 </Link>
               </CardFooter>
             </Card>

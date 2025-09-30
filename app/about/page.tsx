@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   Quote as QuoteIcon,
 } from "lucide-react";
+import SmokyBG from "@/components/SmokyBG";
 
 export default function AboutPage() {
   return (
@@ -29,15 +30,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-[1600px] px-2 sm:px-4">
         {/* Hero */}
         <div className="group relative overflow-hidden rounded-2xl border bg-background/60 p-6 sm:p-10 text-center transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_20px_50px_-20px_rgba(34,211,238,0.35)]">
-          <div
-            className="pointer-events-none absolute -inset-24 opacity-20 blur-3xl"
-            aria-hidden
-            style={{
-              background:
-                "radial-gradient(600px circle at 30% 20%, #aa2ee2, transparent 40%), radial-gradient(600px circle at 70% 60%, #22d3ee, transparent 45%)",
-            }}
-          />
-          <div aria-hidden className="about-smoke pointer-events-none absolute -inset-28 opacity-20 group-hover:opacity-35"></div>
+          <SmokyBG className="absolute -inset-32 z-0" speed={1.6} blobs={8} blurPx={38} opacity={0.32} />
           <h1 className="relative text-4xl sm:text-5xl font-extrabold tracking-tight">About BrickAI</h1>
           <p className="relative mt-4 text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
             We&apos;re building a next-generation property analytics and management platform for ambitious investors who
@@ -56,7 +49,8 @@ export default function AboutPage() {
         {/* Capabilities as Tilt Cards */}
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full">
+            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+              <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <BarChart2 className="h-5 w-5 text-violet-400" aria-hidden="true" />
                 <CardTitle className="text-lg">Portfolio Performance</CardTitle>
@@ -68,7 +62,8 @@ export default function AboutPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full">
+            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+              <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <Calculator className="h-5 w-5 text-emerald-400" aria-hidden="true" />
                 <CardTitle className="text-lg">Deal Analysis</CardTitle>
@@ -80,7 +75,8 @@ export default function AboutPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full">
+            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+              <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <Wrench className="h-5 w-5 text-orange-400" aria-hidden="true" />
                 <CardTitle className="text-lg">Projects & Refurbs</CardTitle>
@@ -92,7 +88,8 @@ export default function AboutPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="h-full">
+            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+              <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <Sparkles className="h-5 w-5 text-yellow-300" aria-hidden="true" />
                 <CardTitle className="text-lg">AI Insights</CardTitle>
@@ -110,7 +107,8 @@ export default function AboutPage() {
           <p className="mt-2 text-center text-muted-foreground">Three pillars that make it all work together.</p>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <TiltCard intensity={4} glareOpacity={0.06}>
-              <Card className="h-full">
+              <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <CardHeader className="flex flex-row items-center gap-2">
                   <Database className="h-5 w-5 text-sky-400" aria-hidden="true" />
                   <CardTitle className="text-lg">Data Models</CardTitle>
@@ -122,10 +120,11 @@ export default function AboutPage() {
             </TiltCard>
 
             <TiltCard intensity={4} glareOpacity={0.06}>
-              <Card className="h-full">
+              <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <CardHeader className="flex flex-row items-center gap-2">
                   <Bot className="h-5 w-5 text-fuchsia-400" aria-hidden="true" />
-                  <CardTitle className="text-lg">AI Copilot</CardTitle>
+                  <CardTitle className="text-lg">AI Assistant</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   AI-assisted tasks, summaries, and insights to keep work moving.
@@ -134,7 +133,8 @@ export default function AboutPage() {
             </TiltCard>
 
             <TiltCard intensity={4} glareOpacity={0.06}>
-              <Card className="h-full">
+              <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                 <CardHeader className="flex flex-row items-center gap-2">
                   <LayoutDashboard className="h-5 w-5 text-lime-400" aria-hidden="true" />
                   <CardTitle className="text-lg">Portfolio Hub</CardTitle>
@@ -199,7 +199,8 @@ export default function AboutPage() {
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
             {["Create your account", "Add your first portfolio", "Automate and iterate"].map((title, i) => (
               <TiltCard key={i} intensity={4} glareOpacity={0.06}>
-                <Card className="h-full">
+                <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+                  <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
                   <CardHeader>
                     <CardTitle className="text-lg"><span className="text-white/60 mr-2">{i + 1}.</span>{title}</CardTitle>
                   </CardHeader>

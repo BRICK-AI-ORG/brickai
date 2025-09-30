@@ -14,11 +14,17 @@ import {
   Sparkles,
 } from "lucide-react";
 import TiltCard from "@/components/ui/tilt-card";
+import SmokyBG from "@/components/SmokyBG";
 
 export default function HomePage() {
   return (
     <>
-      <section className="py-16">
+      {/* Page-scrolling animated smoke background */}
+      <div className="relative">
+        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full z-0 overflow-hidden">
+          <SmokyBG className="absolute inset-0" speed={1.8} blobs={5} minR={0.08} maxR={0.18} blurPx={40} opacity={0.28} centerAlpha={0.4} />
+        </div>
+      <section className="py-10">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">
             <span className="block">Manage your deals</span>
@@ -42,7 +48,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-8">
+      <section className="py-6">
         <div className="mx-auto max-w-6xl px-2 sm:px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold tracking-tight">What BrickAI Does</h2>
@@ -224,7 +230,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </div>
     </>
   );
 }
-

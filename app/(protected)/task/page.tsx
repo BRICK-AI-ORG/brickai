@@ -71,12 +71,12 @@ function TaskForm() {
       setUploading(true);
       await uploadImage(file);
       toast({
-        title: "✅ Image Uploaded",
+        title: "�o. Image Uploaded",
         description: "Image uploaded successfully",
       });
     } catch (error: any) {
       toast({
-        title: "❌ Upload Failed",
+        title: "�?O Upload Failed",
         description: error.message || "Failed to upload image",
         variant: "destructive",
       });
@@ -99,12 +99,12 @@ function TaskForm() {
     try {
       await saveTask();
       toast({
-        title: "✅ Task Updated",
+        title: "�o. Task Updated",
         description: "Task updated successfully",
       });
     } catch (error: any) {
       toast({
-        title: "❌ Error",
+        title: "�?O Error",
         description: "Failed to update task",
         variant: "destructive",
       });
@@ -115,67 +115,37 @@ function TaskForm() {
     try {
       await removeImage();
       toast({
-        title: "✅ Image Removed",
+        title: "�o. Image Removed",
         description: "Image removed successfully",
       });
     } catch (error: any) {
       toast({
-        title: "❌ Remove Failed",
+        title: "�?O Remove Failed",
         description: error.message || "Failed to remove image",
         variant: "destructive",
       });
     }
   };
 
-  // Generate a short-lived signed URL for private bucket access
-  const refreshSignedUrl = async () => {
-    if (task?.image_url) {
-      const { data, error } = await supabase.storage
-        .from("task-attachments")
-        .createSignedUrl(task.image_url, 60 * 10); // 10 minutes
-      if (!error) {
-        setSignedImageUrl(data.signedUrl);
-      } else {
-        setSignedImageUrl(null);
-      }
-    } else {
-      setSignedImageUrl(null);
-    }
-  };
-
-  // Refresh signed URL whenever image path changes
-  useEffect(() => {
-    refreshSignedUrl();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task?.image_url]);
-
   const renderImageDisplay = () => {
+    const signedUrl = signedImageUrl || task?.image_url || null;
     return (
       <div className="space-y-2">
-        <div className="relative w-40 h-40 rounded-lg overflow-hidden">
-          {signedImageUrl ? (
-            <Image
-              src={signedImageUrl}
-              alt="Task attachment"
-              fill
-              sizes="160px"
-              className="object-cover"
-            />
+        <div className="relative w-full h-48 bg-gray-100 rounded-md overflow-hidden">
+          {signedUrl ? (
+            <Image src={signedUrl} alt="Task Image" fill className="object-contain" />
           ) : (
-            <div className="flex items-center justify-center w-40 h-40 bg-gray-100 text-xs text-gray-500">
-              Loading image...
+            <div className="flex items-center justify-center h-full text-sm text-gray-500">
+              No image available
             </div>
           )}
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={handleRemoveImage}
-        >
-          <Trash2 className="mr-1 h-4 w-4" />
-          Remove Image
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={handleRemoveImage}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Remove Image
+          </Button>
+        </div>
       </div>
     );
   };
@@ -185,12 +155,12 @@ function TaskForm() {
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-md p-6 text-center cursor-pointer",
-          isDragActive ? "border-blue-500" : "border-gray-300"
+          "flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-md cursor-pointer",
+          isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"
         )}
       >
         <input {...getInputProps()} />
-        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+        <Upload className="h-6 w-6 text-gray-500" />
         {isDragActive ? (
           <p className="text-sm text-blue-500">Drop the image here...</p>
         ) : (
@@ -291,7 +261,7 @@ function TaskForm() {
         <div className="grid w-full items-center gap-1.5">
           <Label>Attach Image</Label>
           <div className="space-y-2">
-            {task.image_url ? renderImageDisplay() : renderImageUpload()}
+            {task?.image_url ? renderImageDisplay() : renderImageUpload()}
           </div>
         </div>
         <div className="flex space-x-2 w-full pt-4">

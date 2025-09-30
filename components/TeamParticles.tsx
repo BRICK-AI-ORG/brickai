@@ -4,7 +4,8 @@ import React from "react";
 
 type TeamParticlesProps = {
   className?: string;
-  scheme?: "cyan" | "orange";
+  scheme?: "cyan" | "orange" | "violet";
+  density?: number; // 0.1 (very low) .. 1 (normal) .. 2 (high)
 };
 
 type Particle = {
@@ -22,7 +23,7 @@ type Particle = {
   downer: boolean; // a few float downward
 };
 
-export default function TeamParticles({ className, scheme = "cyan" }: TeamParticlesProps) {
+export default function TeamParticles({ className, scheme = "cyan", density = 1 }: TeamParticlesProps) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const rafRef = React.useRef<number | null>(null);
@@ -81,8 +82,15 @@ export default function TeamParticles({ className, scheme = "cyan" }: TeamPartic
       const baseSide = rand(-20, 20) / 60; // lateral drift
       const downer = Math.random() < 0.12; // a few float down
 
-      const hueMin = scheme === "orange" ? 20 : 185;
-      const hueMax = scheme === "orange" ? 40 : 205;
+      let hueMin: number;
+      let hueMax: number;
+      if (scheme === "orange") {
+        hueMin = 20; hueMax = 40;
+      } else if (scheme === "violet") {
+        hueMin = 270; hueMax = 300; // violet/purple range to match #aa2ee2
+      } else {
+        hueMin = 185; hueMax = 205; // cyan/blue
+      }
       const p: Particle = {
         x,
         y,
@@ -100,7 +108,12 @@ export default function TeamParticles({ className, scheme = "cyan" }: TeamPartic
       particlesRef.current.push(p);
     };
 
-    const desiredCount = () => Math.min(420, Math.max(140, Math.floor((width * height) / 2600)));
+    const densityClamped = Math.max(0.1, Math.min(2, density));
+    const desiredCount = () => {
+      const base = Math.min(420, Math.max(140, Math.floor((width * height) / 2600)));
+      // Scale by density; allow very low minimum when density is low
+      return Math.max(16, Math.floor(base * densityClamped));
+    };
 
     // Seed
     for (let i = 0; i < desiredCount(); i++) spawn();
@@ -173,7 +186,7 @@ export default function TeamParticles({ className, scheme = "cyan" }: TeamPartic
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, []);
+  }, [density]);
 
   return (
     <div
