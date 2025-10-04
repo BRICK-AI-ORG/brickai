@@ -37,7 +37,7 @@ const LoginForm = ({ mode = "login" }: { mode?: Mode }) => {
         <div className="space-y-4">
           <Button className="w-full" onClick={handleGoogleLogin}>
             <LogIn className="mr-2 h-4 w-4" />
-            Login with Google
+            {isSignUpMode ? "Sign up with Google" : "Login with Google"}
           </Button>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

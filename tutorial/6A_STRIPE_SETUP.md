@@ -76,10 +76,12 @@ The Customer Portal lets users manage their subscriptions. We'll configure it wi
 
 ```bash
 # Create portal configuration
+# Replace https://your-domain.tld with your live domain
 stripe billing_portal configurations create \
-  -d "business_profile[privacy_policy_url]=https://your-site.com/privacy" \
-  -d "business_profile[terms_of_service_url]=https://your-site.com/terms" \
+  -d "business_profile[privacy_policy_url]=https://your-domain.tld/privacy-policy" \
+  -d "business_profile[terms_of_service_url]=https://your-domain.tld/terms-and-conditions" \
   -d "default_return_url=http://localhost:3000/profile" \
+  -d "features[subscription_update][enabled]=true" \
   -d "features[customer_update][enabled]=true" \
   -d "features[customer_update][allowed_updates][]=email" \
   -d "features[customer_update][allowed_updates][]=address" \
@@ -88,7 +90,9 @@ stripe billing_portal configurations create \
   -d "features[invoice_history][enabled]=true"
 ```
 
-Note: Update the privacy/terms URLs to your actual URLs before going to production.
+Notes:
+- This project’s legal pages live at `/privacy-policy` and `/terms-and-conditions`.
+- For production, change `default_return_url` to `https://your-domain.tld/profile`.
 
 ## Set Up Webhooks
 

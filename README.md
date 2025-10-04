@@ -115,13 +115,19 @@ stripe prices create \
 3. Configure customer portal:
 
 ```bash
+# Replace https://your-domain.tld with your actual live domain
 stripe billing_portal configurations create \
-  -d "business_profile[privacy_policy_url]=https://your-site.com/privacy" \
-  -d "business_profile[terms_of_service_url]=https://your-site.com/terms" \
+  -d "business_profile[privacy_policy_url]=https://your-domain.tld/privacy-policy" \
+  -d "business_profile[terms_of_service_url]=https://your-domain.tld/terms-and-conditions" \
   -d "default_return_url=http://localhost:3000/profile" \
+  -d "features[subscription_update][enabled]=true" \
   -d "features[subscription_cancel][enabled]=true" \
   -d "features[payment_method_update][enabled]=true"
 ```
+
+Notes:
+- The app exposes legal pages at `/privacy-policy` and `/terms-and-conditions`.
+- For production, update `default_return_url` to your live origin (e.g., `https://your-domain.tld/profile`).
 
 4. Set up webhook in Stripe Dashboard:
    - Endpoint: `https://[PROJECT_ID].supabase.co/functions/v1/stripe-webhook`
@@ -160,6 +166,9 @@ supabase secrets set OPENAI_API_KEY="sk-xxx..."
 supabase secrets set STRIPE_SECRET_KEY=sk_test_xxx
 supabase secrets set STRIPE_PRICE_ID=price_xxx
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_xxx
+supabase secrets set APP_URL=https://your-domain.tld
+# Optional: lock down CORS for the create-stripe-session function
+supabase secrets set ALLOWED_ORIGINS=https://your-domain.tld,http://localhost:3000
 ```
 
 ### Running Tests

@@ -3,10 +3,13 @@ import React from "react";
 import TiltCard from "@/components/ui/tilt-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, BarChart2, Clock } from "lucide-react";
+import EqualizeHeights from "@/components/EqualizeHeights";
 
 export default function SolutionsPage() {
   return (
     <section className="py-16">
+      <EqualizeHeights targetClass="solutions-card" />
+      <EqualizeHeights targetClass="solutions-outcome-card" />
       <div className="mx-auto max-w-[1600px] px-2 sm:px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Solutions</h1>
@@ -17,7 +20,7 @@ export default function SolutionsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Landlords</CardTitle>
@@ -36,7 +39,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Property Managers</CardTitle>
@@ -55,7 +58,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Letting Agents</CardTitle>
@@ -74,7 +77,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Investors</CardTitle>
@@ -93,7 +96,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Facilities & Ops</CardTitle>
@@ -112,7 +115,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-card group relative overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader>
                 <CardTitle className="text-xl">Finance & Admin</CardTitle>
@@ -140,7 +143,7 @@ export default function SolutionsPage() {
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-outcome-card group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
@@ -153,7 +156,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-outcome-card group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <Clock className="w-5 h-5 text-sky-400" aria-hidden="true" />
@@ -166,7 +169,7 @@ export default function SolutionsPage() {
           </TiltCard>
 
           <TiltCard intensity={4} glareOpacity={0.06}>
-            <Card className="group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
+            <Card className="solutions-outcome-card group relative overflow-hidden h-full transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_16px_40px_-20px_rgba(34,211,238,0.35)]">
               <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity card-blend-bg"></div>
               <CardHeader className="flex flex-row items-center gap-2">
                 <BarChart2 className="w-5 h-5 text-violet-400" aria-hidden="true" />

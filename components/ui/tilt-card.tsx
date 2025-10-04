@@ -12,7 +12,7 @@ type TiltCardProps = {
 
 export function TiltCard({
   className,
-  intensity = 12,
+  intensity = 4,
   glareOpacity = 0.12,
   children,
 }: TiltCardProps) {

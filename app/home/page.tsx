@@ -148,7 +148,7 @@ export default function HomePage() {
 
           <div ref={eqGridRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Portfolio Modelling */}
-            <TiltCard intensity={10} glareOpacity={0.1}>
+            <TiltCard intensity={4} glareOpacity={0.1}>
               <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export default function HomePage() {
             </TiltCard>
 
             {/* Property / Homes */}
-            <TiltCard intensity={10} glareOpacity={0}>
+            <TiltCard intensity={4} glareOpacity={0}>
               <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ export default function HomePage() {
             </TiltCard>
 
             {/* AI Insights */}
-            <TiltCard intensity={10} glareOpacity={0.1}>
+            <TiltCard intensity={4} glareOpacity={0.1}>
               <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ export default function HomePage() {
             </TiltCard>
 
             {/* Data Integrations */}
-            <TiltCard intensity={10} glareOpacity={0}>
+            <TiltCard intensity={4} glareOpacity={0}>
               <div data-eq-card className="relative overflow-hidden rounded-2xl border p-6 sm:p-8 bg-background/60 flex flex-col">
                 <div className="relative z-10">
                   <div className="flex items-center gap-3">

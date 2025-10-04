@@ -96,7 +96,9 @@ export default function WaveLines({
         svgRef.current.setAttribute("viewBox", box);
         prevBoxRef.current = box;
       }
-      const margin = Math.max(16, Math.min(40, Math.floor(height * 0.06)));
+      // Use a small inner margin and allow gentle overshoot so top/bottom lines don't look "pinned".
+      const innerMargin = Math.max(8, Math.min(24, Math.floor(height * 0.03)));
+      const overshoot = Math.max(12, Math.min(40, Math.floor(height * 0.06)));
       const minSep = Math.max(6, Math.min(16, Math.floor(height * 0.02)));
       const samples = Math.max(48, Math.min(200, Math.floor(width / 12))); // denser sampling for smoother curves
 
@@ -129,10 +131,12 @@ export default function WaveLines({
         const gauss = Math.exp(-(dx * dx) / 0.06); // wider bell for smoother influence
 
         // Iterate lines top -> bottom and ensure separation
-        let prevY = margin - minSep;
+        // Start above the top with an overshoot so the first line isn't hard-clamped.
+        let prevY = -overshoot - minSep;
         for (let i = 0; i < lines; i++) {
           const tLine = i / (lines - 1);
-          const baseY = margin + tLine * (height - 2 * margin);
+          // Distribute base positions across the full height with extra room above/below.
+          const baseY = -overshoot + innerMargin + tLine * (height + 2 * overshoot - 2 * innerMargin);
 
           // Sinusoidal curvature + local CoG push/pull
           const amp = lineAmp[i];
@@ -144,8 +148,8 @@ export default function WaveLines({
 
           let y = baseY + sinMix + gravBend;
 
-          // Hard bounds to keep room for lines below to separate
-          const maxForRemaining = height - margin - (lines - 1 - i) * minSep;
+          // Soft upper bound for remaining lines, but allow overshoot below the bottom edge.
+          const maxForRemaining = height + overshoot - (lines - 1 - i) * minSep;
           if (y > maxForRemaining) y = maxForRemaining;
 
           // Enforce non-intersection: monotonically increasing with a min separation
@@ -155,11 +159,7 @@ export default function WaveLines({
           ysCol[i] = y;
         }
 
-        // If bottom line overflows, shift entire column up
-        const overflow = ysCol[lines - 1] - (height - margin);
-        if (overflow > 0) {
-          for (let i = 0; i < lines; i++) ysCol[i] -= overflow;
-        }
+        // No hard column shift; let bottom lines breathe beyond the edge (clipped by container).
 
         for (let i = 0; i < lines; i++) {
           pts[i].push({ x, y: ysCol[i] });

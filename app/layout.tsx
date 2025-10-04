@@ -21,13 +21,14 @@ export default function RootLayout({
   const wideRoutes = new Set(["/home", "/pricing", "/solutions", "/about", "/faqs", "/privacy-policy", "/terms-and-conditions", "/cookie-policy", "/contact"]);
   const isWide = pathname ? wideRoutes.has(pathname) : false;
   const yPad = pathname === "/home" ? "py-0" : "py-8";
+  const isAuth = pathname === "/login" || pathname === "/create-account";
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-[#121212]`}>
         <TitleSetter />
         <div className="relative isolate flex flex-col min-h-screen">
-          {/* Full-viewport smoke background for /home only */}
-          {pathname === "/home" && (
+          {/* Full-viewport smoke background for /home and auth pages */}
+          {(pathname === "/home" || isAuth) && (
             <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <SmokyBG
                 className="absolute inset-0"

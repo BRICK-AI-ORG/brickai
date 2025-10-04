@@ -154,8 +154,9 @@ export default function AboutPage() {
 
           {/* Mobile: vertical auto-scroll */}
           <div className="md:hidden mt-4 pause-on-hover">
-            <div className="h-64 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="flex flex-col gap-3 animate-marquee-y will-change-transform">
+            <div className="relative h-64 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3">
+              <SmokyBG className="absolute -inset-24 z-0" speed={1.4} blobs={7} blurPx={32} opacity={0.28} />
+              <div className="relative z-10 flex flex-col gap-3 animate-marquee-y will-change-transform">
                 {[...Array(2)].map((_, pass) => (
                   <React.Fragment key={pass}>
                     <ValueItem label="Speed" icon={<Zap className="h-4 w-4 text-[#22d3ee]" />} color="#22d3ee" desc="Move faster with streamlined workflows and shortcuts." />
@@ -174,8 +175,9 @@ export default function AboutPage() {
 
           {/* Desktop: horizontal auto-scroll */}
           <div className="hidden md:block mt-6 pause-on-hover">
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="inline-flex gap-3 animate-marquee-x will-change-transform">
+            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3">
+              <SmokyBG className="absolute -inset-24 z-0" speed={1.4} blobs={7} blurPx={32} opacity={0.28} />
+              <div className="relative z-10 inline-flex gap-3 animate-marquee-x will-change-transform">
                 {[...Array(2)].map((_, pass) => (
                   <React.Fragment key={pass}>
                     <ValueCard label="Speed" icon={<Zap className="h-4 w-4 text-[#22d3ee]" />} color="#22d3ee" desc="Move faster with streamlined workflows and shortcuts." />
