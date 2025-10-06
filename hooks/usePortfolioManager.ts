@@ -80,6 +80,66 @@ export function usePortfolioManager() {
     }
   }
 
+  async function updatePortfolio(
+    portfolioId: string,
+    updates: { name?: string; description?: string | null }
+  ) {
+    try {
+      const { data, error } = await supabase
+        .from("portfolios")
+        .update({
+          ...(updates.name !== undefined ? { name: updates.name } : {}),
+          ...(updates.description !== undefined
+            ? { description: updates.description }
+            : {}),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("portfolio_id", portfolioId)
+        .select()
+        .single();
+      if (error) throw error;
+      setItems((prev) =>
+        prev.map((it) =>
+          it.portfolio.portfolio_id === portfolioId
+            ? { ...it, portfolio: { ...it.portfolio, ...data } }
+            : it
+        )
+      );
+      return data;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async function deletePortfolio(portfolioId: string) {
+    try {
+      const { error } = await supabase
+        .from("portfolios")
+        .delete()
+        .eq("portfolio_id", portfolioId);
+      if (error) throw error;
+      setItems((prev) => prev.filter((it) => it.portfolio.portfolio_id !== portfolioId));
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async function deletePortfolioWithPassword(portfolioId: string, password: string) {
+    // Re-authenticate the current user to verify password before destructive action
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user?.email) throw new Error("Not authenticated");
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: session.user.email,
+      password,
+    });
+    if (authError) throw new Error("Incorrect password");
+
+    await deletePortfolio(portfolioId);
+  }
+
   const FUNCTION_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-task-with-ai`;
 
   async function createTask(portfolioId: string, title: string, description: string) {
@@ -88,19 +148,36 @@ export function usePortfolioManager() {
     } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
 
-    const response = await fetch(FUNCTION_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ title, description, portfolio_id: portfolioId }),
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create task");
+    let task: Task | null = null;
+    try {
+      const response = await fetch(FUNCTION_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ title, description, portfolio_id: portfolioId }),
+      });
+      if (!response.ok) {
+        throw new Error(`Function error ${response.status}`);
+      }
+      task = (await response.json()) as Task;
+    } catch (_fnErr) {
+      // Fallback: direct insert without AI label if function fails (e.g. not deployed)
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({
+          title,
+          description,
+          completed: false,
+          user_id: session.user.id,
+          portfolio_id: portfolioId,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      task = data as Task;
     }
-    const task = (await response.json()) as Task;
     setItems((prev) =>
       prev.map((it) =>
         it.portfolio.portfolio_id === portfolioId
@@ -144,9 +221,11 @@ export function usePortfolioManager() {
     error,
     refresh: fetchAll,
     createPortfolio,
+    updatePortfolio,
+    deletePortfolio,
+    deletePortfolioWithPassword,
     createTask,
     deleteTask,
     toggleTaskComplete,
   };
 }
-

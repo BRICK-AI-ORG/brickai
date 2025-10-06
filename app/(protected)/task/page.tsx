@@ -85,6 +85,26 @@ function TaskForm() {
     }
   };
 
+  // Generate a signed URL for private bucket images
+  useEffect(() => {
+    (async () => {
+      const path = task?.image_url;
+      if (!path) {
+        setSignedImageUrl(null);
+        return;
+      }
+      try {
+        const { data, error } = await supabase.storage
+          .from("task-attachments")
+          .createSignedUrl(path, 60 * 60);
+        if (error) throw error;
+        setSignedImageUrl(data.signedUrl);
+      } catch (e) {
+        setSignedImageUrl(null);
+      }
+    })();
+  }, [task?.image_url]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleImageUpload,
     accept: {
@@ -128,7 +148,7 @@ function TaskForm() {
   };
 
   const renderImageDisplay = () => {
-    const signedUrl = signedImageUrl || task?.image_url || null;
+    const signedUrl = signedImageUrl || null;
     return (
       <div className="space-y-2">
         <div className="relative w-full h-48 bg-gray-100 rounded-md overflow-hidden">

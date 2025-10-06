@@ -17,33 +17,92 @@ export function useAuth(): UseAuthReturn {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isAuthBusy, setIsAuthBusy] = useState(false);
 
   // Helper functions
-  const clearError = () => setError(null);
+  const clearError = () => {
+    setError(null);
+    setNotice(null);
+  };
+  const clearNotice = () => setNotice(null);
+
+  const resendConfirmation = async () => {
+    try {
+      if (!email) {
+        setError("Please enter your email address");
+        return;
+      }
+      setIsAuthBusy(true);
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/app/hub` },
+      } as any);
+      if (error) {
+        const is429 = (error as any).status === 429;
+        const msg =
+          (is429 &&
+            "Too many requests. Please wait a minute and try again.") ||
+          error.message;
+        setError(msg);
+      } else {
+        setNotice(`We resent a confirmation link to ${email}.`);
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to resend confirmation email.");
+    } finally {
+      setIsAuthBusy(false);
+    }
+  };
 
   const fetchUserProfile = async (userId: string, userEmail: string) => {
     try {
-      const [profileResponse, usageResponse] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", userId).single(),
-        supabase
-          .from("usage_tracking")
-          .select("tasks_created")
-          .eq("user_id", userId)
-          .eq("year_month", new Date().toISOString().slice(0, 7))
-          .maybeSingle(),
-      ]);
+      // Try to get the profile; treat 0 rows gracefully
+      const profileResponse = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      if (profileResponse.error) throw profileResponse.error;
+      // If no profile row yet (e.g., trigger lagged), try to create one client-side
+      if (!profileResponse.data) {
+        const { error: insertErr } = await supabase
+          .from("profiles")
+          .insert({ user_id: userId, name: null });
+        if (insertErr) {
+          // Log but don't sign the user out; allow app to continue
+          console.error("Profile create fallback failed:", insertErr);
+        }
+      }
+
+      // Fetch usage tracking (optional)
+      const usageResponse = await supabase
+        .from("usage_tracking")
+        .select("tasks_created")
+        .eq("user_id", userId)
+        .eq("year_month", new Date().toISOString().slice(0, 7))
+        .maybeSingle();
+
+      // Fetch profile again (best-effort)
+      const finalProfile = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (finalProfile.error) throw finalProfile.error;
 
       setUser({
-        ...profileResponse.data,
+        ...(finalProfile.data || { user_id: userId, name: null }),
         email: userEmail,
         tasks_created: usageResponse.data?.tasks_created || 0,
       });
     } catch (error) {
       console.error("Critical error fetching user profile:", error);
-      await signOut();
+      // Do not force sign-out on profile read issues; keep user logged in
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +124,7 @@ export function useAuth(): UseAuthReturn {
   // Auth methods
   const signOut = async () => {
     try {
+      setIsAuthBusy(true);
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
@@ -75,6 +135,8 @@ export function useAuth(): UseAuthReturn {
     } catch (error: any) {
       setError(error.message);
       console.error("Error signing out:", error);
+    } finally {
+      setIsAuthBusy(false);
     }
   };
 
@@ -82,48 +144,84 @@ export function useAuth(): UseAuthReturn {
     e.preventDefault();
     clearError();
     try {
+      setIsAuthBusy(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) setError(error.message);
+      if (error) {
+        // Map common cases for clarity
+        const raw = (error.message || "").toLowerCase();
+        const code = (error as any).code || "";
+        const status = (error as any).status;
+        const is429 = status === 429;
+        const is400 = status === 400;
+        const invalid = raw.includes("invalid") || raw.includes("credential") || code === "invalid_credentials";
+        const unconfirmed = raw.includes("confirm");
+        const msg =
+          (is429 && "Too many requests. Please wait a minute and try again.") ||
+          ((is400 && unconfirmed) &&
+            "Please confirm your email before logging in. Check your inbox (and spam).") ||
+          ((is400 && invalid) && "Invalid email or password.") ||
+          error.message;
+        setError(msg);
+      }
     } catch (error: any) {
       setError(error.message);
       console.error("Error logging in:", error);
+    } finally {
+      setIsAuthBusy(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      setIsAuthBusy(true);
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/home`,
+          redirectTo: `${window.location.origin}/app/hub`,
+          queryParams: { prompt: "select_account" },
         },
       });
     } catch (error: any) {
       setError(error.message);
       console.error("Error with Google login:", error);
+    } finally {
+      setIsAuthBusy(false);
     }
   };
 
   const handleSignup = async () => {
+    if (isAuthBusy) return; // prevent double submit
     clearError();
     try {
+      setIsAuthBusy(true);
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/login` },
+        options: { emailRedirectTo: `${window.location.origin}/app/hub` },
       });
 
       if (error) {
-        setError(error.message);
+        const alreadyExists = /already\s+registered|user.*exists/i.test(error.message || "");
+        const msg =
+          // @ts-ignore optional status on error
+          (error.status === 429 &&
+            "Too many requests. Please wait a minute and try again.") ||
+          (alreadyExists &&
+            "This email is already registered. Please log in or use Google.") ||
+          error.message;
+        setError(msg);
       } else {
-        setError("Please check your email to confirm your account");
+        setNotice(`We sent a confirmation link to ${email}. Please check your inbox to confirm.`);
+        setError(null);
       }
     } catch (error: any) {
       setError(error.message);
       console.error("Error signing up:", error);
+    } finally {
+      setIsAuthBusy(false);
     }
   };
 
@@ -162,16 +260,20 @@ export function useAuth(): UseAuthReturn {
     isLoggedIn,
     isLoading,
     error,
+    notice,
     isSignUpMode,
+    isAuthBusy,
 
     // Operations
     signOut,
     handleLogin,
     handleGoogleLogin,
     handleSignup,
+    resendConfirmation,
     setEmail,
     setPassword,
     setIsSignUpMode,
     clearError,
+    clearNotice,
   };
 }

@@ -29,6 +29,12 @@ export default function TeamParticles({ className, scheme = "cyan", density = 1 
   const rafRef = React.useRef<number | null>(null);
   const particlesRef = React.useRef<Particle[]>([]);
   const tRef = React.useRef(0);
+  const schemeRef = React.useRef<TeamParticlesProps["scheme"]>(scheme);
+
+  // Keep latest scheme in a ref without retriggering the main effect
+  React.useEffect(() => {
+    schemeRef.current = scheme;
+  }, [scheme]);
 
   React.useEffect(() => {
     const wrap = wrapRef.current;
@@ -84,9 +90,10 @@ export default function TeamParticles({ className, scheme = "cyan", density = 1 
 
       let hueMin: number;
       let hueMax: number;
-      if (scheme === "orange") {
+      const s = schemeRef.current;
+      if (s === "orange") {
         hueMin = 20; hueMax = 40;
-      } else if (scheme === "violet") {
+      } else if (s === "violet") {
         hueMin = 270; hueMax = 300; // violet/purple range to match #aa2ee2
       } else {
         hueMin = 185; hueMax = 205; // cyan/blue

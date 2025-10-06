@@ -29,7 +29,8 @@ export function Toaster() {
           </Toast>
         );
       })}
-      <ToastViewport />
+      {/* Force bottom-right position at all breakpoints */}
+      <ToastViewport className="fixed bottom-0 right-0 z-[100] flex max-h-screen w-full max-w-[420px] flex-col p-4" />
     </ToastProvider>
   );
 }

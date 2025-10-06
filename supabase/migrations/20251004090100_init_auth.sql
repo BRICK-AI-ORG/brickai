@@ -35,3 +35,4 @@ alter table public.tasks enable row level security;
 CREATE INDEX idx_tasks_user_created 
 ON public.tasks(user_id, created_at DESC);
 
+

@@ -17,7 +17,7 @@ const PUBLIC_ROUTES = [
   "/cookie-policy",
   "/contact",
 ];
-const DEFAULT_AUTHENTICATED_ROUTE = "/home";
+const DEFAULT_AUTHENTICATED_ROUTE = "/app/hub";
 const DEFAULT_PUBLIC_ROUTE = "/login";
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
@@ -31,7 +31,14 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
 
     const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
-    if (isLoggedIn && (pathname === "/" || pathname === DEFAULT_PUBLIC_ROUTE)) {
+    // If logged in and on marketing/auth pages, send to hub
+    if (
+      isLoggedIn &&
+      (pathname === "/" ||
+        pathname === DEFAULT_PUBLIC_ROUTE ||
+        pathname === "/create-account" ||
+        pathname === "/home")
+    ) {
       router.replace(DEFAULT_AUTHENTICATED_ROUTE);
     } else if (!isLoggedIn && !isPublicRoute) {
       router.replace(DEFAULT_PUBLIC_ROUTE);

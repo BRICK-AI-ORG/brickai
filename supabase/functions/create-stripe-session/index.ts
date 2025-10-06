@@ -77,8 +77,20 @@ Deno.serve(async (req) => {
       throw profileError;
     }
 
-    if (!profile?.stripe_customer_id) {
-      throw new Error("No Stripe customer found");
+    // Ensure a Stripe customer exists; create one if missing
+    let stripeCustomerId = profile?.stripe_customer_id as string | null;
+    if (!stripeCustomerId) {
+      const created = await stripe.customers.create({
+        email: user.email ?? undefined,
+        metadata: { user_id: user.id },
+      });
+
+      stripeCustomerId = created.id;
+      const { error: upsertError } = await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: stripeCustomerId, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      if (upsertError) throw upsertError;
     }
 
     const originUrl = APP_URL;
@@ -86,8 +98,8 @@ Deno.serve(async (req) => {
     // Create Portal session if already subscribed
     if (profile.subscription_plan === "premium") {
       const session = await stripe.billingPortal.sessions.create({
-        customer: profile.stripe_customer_id,
-        return_url: `${originUrl}/profile`,
+        customer: stripeCustomerId,
+        return_url: `${originUrl}/app/profile`,
       });
       return new Response(JSON.stringify({ url: session.url }), {
         headers: { ...buildCorsHeaders(req), "Content-Type": "application/json" },
@@ -96,7 +108,7 @@ Deno.serve(async (req) => {
 
     // Create Checkout session for new subscribers
     const session = await stripe.checkout.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: stripeCustomerId!,
       line_items: [
         {
           price: STRIPE_PRICE_ID!,
@@ -104,8 +116,8 @@ Deno.serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${originUrl}/profile?success=true`,
-      cancel_url: `${originUrl}/profile?canceled=true`,
+      success_url: `${originUrl}/app/profile?success=true`,
+      cancel_url: `${originUrl}/app/profile?canceled=true`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

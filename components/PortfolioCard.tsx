@@ -10,8 +10,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface PortfolioCardProps {
   portfolio: Portfolio;
@@ -19,6 +22,11 @@ interface PortfolioCardProps {
   onCreateTask: (portfolioId: string, title: string, description: string) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleComplete: (taskId: string, completed: boolean) => Promise<void>;
+  onEditPortfolio?: (
+    id: string,
+    updates: { name?: string; description?: string | null }
+  ) => Promise<void>;
+  onDeletePortfolio?: (id: string, password: string) => Promise<void>;
 }
 
 export function PortfolioCard({
@@ -27,8 +35,15 @@ export function PortfolioCard({
   onCreateTask,
   onDeleteTask,
   onToggleComplete,
+  onEditPortfolio,
+  onDeletePortfolio,
 }: PortfolioCardProps) {
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [name, setName] = useState(portfolio.name);
+  const [description, setDescription] = useState(portfolio.description ?? "");
+  const [pwd, setPwd] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const handleCreate = async (title: string, description: string) => {
     await onCreateTask(portfolio.portfolio_id, title, description);
@@ -36,17 +51,91 @@ export function PortfolioCard({
   };
 
   return (
-    <div className="bg-card border rounded-md p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">{portfolio.name}</h2>
+    <div className="bg-card border rounded-md p-6 sm:p-8 space-y-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-semibold truncate">{portfolio.name}</h2>
           {portfolio.description && (
-            <p className="text-sm text-muted-foreground">{portfolio.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground break-words">{portfolio.description}</p>
           )}
         </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {onEditPortfolio && (
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Portfolio</DialogTitle>
+                  <DialogDescription>Update the name and description.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="pname">Name</Label>
+                    <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="pdesc">Description</Label>
+                    <Textarea id="pdesc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      onClick={async () => {
+                        await onEditPortfolio(portfolio.portfolio_id, {
+                          name: name.trim(),
+                          description: description.trim() || null,
+                        });
+                        setEditOpen(false);
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+                {/* Danger zone moved here from Add Task dialog */}
+                <div className="pt-4 mt-4 border-t">
+                  <div className="text-sm font-semibold mb-2">Danger zone</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pdel">Confirm your password to delete this portfolio</Label>
+                    <Input
+                      id="pdel"
+                      type="password"
+                      value={pwd}
+                      onChange={(e) => setPwd(e.target.value)}
+                      placeholder="Your account password"
+                    />
+                    <Button
+                      variant="destructive"
+                      disabled={!pwd || deleting || !onDeletePortfolio}
+                      onClick={async () => {
+                        if (!onDeletePortfolio) return;
+                        setDeleting(true);
+                        try {
+                          await onDeletePortfolio(portfolio.portfolio_id, pwd);
+                          setEditOpen(false);
+                        } finally {
+                          setDeleting(false);
+                          setPwd("");
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Portfolio
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+      {/* Add Task button on its own line, smaller */}
+      <div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="mt-1">
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Task
             </Button>

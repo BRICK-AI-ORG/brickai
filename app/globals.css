@@ -84,6 +84,12 @@ body {
   }
 }
 
+/* Auth card gets a purple outline when showing confirm email notice */
+.outer-auth-card:has([data-confirm-email]) {
+  border-color: rgba(170, 46, 226, 0.6) !important;
+  box-shadow: inset 0 0 0 1px rgba(170, 46, 226, 0.4);
+}
+
 /* About page carousels */
 .animate-marquee-x {
   animation: marquee-x 28s linear infinite;

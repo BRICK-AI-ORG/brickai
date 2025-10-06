@@ -15,9 +15,11 @@ import {
 } from "lucide-react";
 import TiltCard from "@/components/ui/tilt-card";
 import React from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function HomePage() {
   const eqGridRef = React.useRef<HTMLDivElement | null>(null);
+  const { isLoggedIn } = useAuth();
 
   React.useEffect(() => {
     const root = eqGridRef.current;
@@ -57,9 +59,11 @@ export default function HomePage() {
             <Link href="/pricing" aria-label="View Pricing">
               <Button className="bg-[#aa2ee2] hover:bg-[#9322c8]">View Pricing</Button>
             </Link>
-            <Link href="/login" aria-label="Login">
-              <Button className="bg-[#242424] hover:bg-[#2a2a2a] text-white">Login</Button>
-            </Link>
+            {!isLoggedIn && (
+              <Link href="/login" aria-label="Login">
+                <Button className="bg-[#242424] hover:bg-[#2a2a2a] text-white">Login</Button>
+              </Link>
+            )}
           </div>
           <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-[#aa2ee2]" aria-hidden />

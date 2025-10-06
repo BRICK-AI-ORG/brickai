@@ -6,11 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import React from "react";
 
 export default function Profile() {
-  const { user, isLoading, signOut } = useAuth();
-  const { session } = useAuth();
+  const { user, isLoading, isLoggedIn, signOut, session } = useAuth();
   const { manageSubscription } = useSubscription();
+
+  React.useEffect(() => {
+    // no-op here; guarded by app/app/layout.tsx
+  }, []);
 
   if (isLoading || !user) {
     return <LoadingSkeleton />;

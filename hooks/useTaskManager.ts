@@ -115,10 +115,6 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
         .upload(fileName, file, {
           upsert: true,
           contentType: file.type,
-          duplex: "half",
-          headers: {
-            "content-length": file.size.toString(),
-          },
         });
 
       if (uploadError) throw uploadError;

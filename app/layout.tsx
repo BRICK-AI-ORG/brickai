@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
 import TitleSetter from "@/components/TitleSetter";
 import { usePathname } from "next/navigation";
+import SessionActivityMonitor from "@/components/SessionActivityMonitor";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const wideRoutes = new Set(["/home", "/pricing", "/solutions", "/about", "/faqs", "/privacy-policy", "/terms-and-conditions", "/cookie-policy", "/contact"]);
+  const wideRoutes = new Set(["/home", "/pricing", "/solutions", "/about", "/faqs", "/privacy-policy", "/terms-and-conditions", "/cookie-policy", "/contact", "/app/hub"]);
   const isWide = pathname ? wideRoutes.has(pathname) : false;
   const yPad = pathname === "/home" ? "py-0" : "py-8";
   const isAuth = pathname === "/login" || pathname === "/create-account";
@@ -53,7 +54,7 @@ export default function RootLayout({
             {isWide ? (
               children
             ) : (
-              <Card className="w-full max-w-2xl mx-auto">
+              <Card className="outer-auth-card w-full max-w-2xl mx-auto">
                 <CardContent className="p-6">{children}</CardContent>
               </Card>
             )}
@@ -61,6 +62,7 @@ export default function RootLayout({
           <Footer />
         </div>
         <Toaster />
+        <SessionActivityMonitor />
       </body>
     </html>
   );

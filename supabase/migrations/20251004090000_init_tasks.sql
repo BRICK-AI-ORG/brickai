@@ -1,6 +1,8 @@
--- Tasks table
+-- Ensure pgcrypto is available for UUID generation
+create extension if not exists pgcrypto;
+
 create table public.tasks (
-  task_id uuid default uuid_generate_v4() primary key,
+  task_id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles on delete cascade,
   title text not null,
   description text,

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -36,12 +37,13 @@ const Header = () => {
       <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link href={"/home"} className="flex items-center gap-3 text-xl font-bold min-w-0">
-            <img
+            <Image
               src="/favicon.png"
               alt="BrickAI logo"
               width={logoSize}
               height={logoSize}
               className="w-10 h-10 sm:w-12 sm:h-12 md:w-[72px] md:h-[72px]"
+              priority
             />
             <span className="hidden sm:inline">BrickAI</span>
           </Link>
@@ -65,7 +67,7 @@ const Header = () => {
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2 sm:gap-3">
           {isLoggedIn ? (
-            <Link href="/profile" aria-label="Profile" className="flex-shrink-0">
+            <Link href="/app/profile" aria-label="Profile" className="flex-shrink-0">
               <UserCircle className="w-6 h-6" />
             </Link>
           ) : (
@@ -113,7 +115,7 @@ const Header = () => {
         <div id="mobile-nav" className="md:hidden border-t border-white/10">
           <div className="container mx-auto px-4 py-3 space-y-3">
             {isLoggedIn ? (
-              <Link href="/profile" aria-label="Profile" onClick={closeMobile}>
+              <Link href="/app/profile" aria-label="Profile" onClick={closeMobile}>
                 <div className="flex items-center gap-2 py-2 text-white/90 hover:text-white">
                   <UserCircle className="w-5 h-5" />
                   <span>Profile</span>

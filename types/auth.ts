@@ -1,8 +1,10 @@
 import { User } from "./models";
+import type React from "react";
 
 export interface BaseState {
   isLoading: boolean;
   error: string | null;
+  notice?: string | null;
 }
 
 export interface AuthState extends BaseState {
@@ -12,6 +14,7 @@ export interface AuthState extends BaseState {
   email: string;
   password: string;
   isSignUpMode: boolean;
+  isAuthBusy: boolean;
 }
 
 export interface AuthOperations {
@@ -19,10 +22,12 @@ export interface AuthOperations {
   handleLogin: (e: React.FormEvent) => Promise<void>;
   handleGoogleLogin: () => Promise<void>;
   handleSignup: () => Promise<void>;
+  resendConfirmation: () => Promise<void>;
   setEmail: (value: string) => void;
   setPassword: (value: string) => void;
   setIsSignUpMode: (value: boolean) => void;
   clearError: () => void;
+  clearNotice?: () => void;
 }
 
 export type UseAuthReturn = AuthState & AuthOperations;

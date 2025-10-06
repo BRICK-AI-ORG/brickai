@@ -1,6 +1,6 @@
 -- Portfolios table
 create table if not exists public.portfolios (
-  portfolio_id uuid default uuid_generate_v4() primary key,
+  portfolio_id uuid default gen_random_uuid() primary key,
   user_id uuid not null references public.profiles(user_id) on delete cascade,
   name varchar not null check (name <> ''),
   description text,

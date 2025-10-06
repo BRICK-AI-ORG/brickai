@@ -83,3 +83,4 @@ create trigger cleanup_storage_on_task_delete
 
 -- Grant necessary permissions
 grant delete on storage.objects to authenticated;
+

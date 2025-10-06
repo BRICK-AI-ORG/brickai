@@ -117,8 +117,8 @@ stripe prices create \
 ```bash
 # Replace https://your-domain.tld with your actual live domain
 stripe billing_portal configurations create \
-  -d "business_profile[privacy_policy_url]=https://your-domain.tld/privacy-policy" \
-  -d "business_profile[terms_of_service_url]=https://your-domain.tld/terms-and-conditions" \
+  -d "business_profile[privacy_policy_url]=http://localhost:3000/privacy-policy" \
+  -d "business_profile[terms_of_service_url]=http://localhost:3000/terms-and-conditions" \
   -d "default_return_url=http://localhost:3000/profile" \
   -d "features[subscription_update][enabled]=true" \
   -d "features[subscription_cancel][enabled]=true" \
