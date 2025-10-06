@@ -8,8 +8,10 @@ import SmokyBG from "@/components/SmokyBG";
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
 import TitleSetter from "@/components/TitleSetter";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import SessionActivityMonitor from "@/components/SessionActivityMonitor";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +21,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const wideRoutes = new Set(["/home", "/pricing", "/solutions", "/about", "/faqs", "/privacy-policy", "/terms-and-conditions", "/cookie-policy", "/contact", "/app/hub"]);
-  const isWide = pathname ? wideRoutes.has(pathname) : false;
+  const router = useRouter();
+  const { isLoggedIn, isLoading } = useAuth();
+  const isAppRoute = pathname?.startsWith("/app") ?? false;
+  const wideRoutes = new Set([
+    "/home",
+    "/pricing",
+    "/solutions",
+    "/about",
+    "/faqs",
+    "/privacy-policy",
+    "/terms-and-conditions",
+    "/cookie-policy",
+    "/contact",
+    "/app/hub",
+  ]);
+  const isWide = pathname ? wideRoutes.has(pathname) || pathname.startsWith("/app") : false;
   const yPad = pathname === "/home" ? "py-0" : "py-8";
   const isAuth = pathname === "/login" || pathname === "/create-account";
+
+  // If logged in, prevent access to any non-/app routes
+  useEffect(() => {
+    if (isLoading) return;
+    if (isLoggedIn && pathname && !pathname.startsWith("/app")) {
+      router.replace("/app/hub");
+    }
+  }, [isLoggedIn, isLoading, pathname, router]);
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-[#121212]`}>
@@ -43,7 +67,7 @@ export default function RootLayout({
               />
             </div>
           )}
-          <Header />
+          {!isAppRoute && <Header />}
           <main
             className={
               isWide
@@ -59,7 +83,7 @@ export default function RootLayout({
               </Card>
             )}
           </main>
-          <Footer />
+          {!isAppRoute && <Footer />}
         </div>
         <Toaster />
         <SessionActivityMonitor />
