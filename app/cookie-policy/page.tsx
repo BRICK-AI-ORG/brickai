@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function CookiePolicyPage() {
   return (
-    <section className="py-6">
+    <section className="pt-10 pb-6">
       <div className="mx-auto max-w-[1000px] space-y-6">
         <header className="text-center">
           <h1 id="top" className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-[#aa2ee2] to-[#9322c8] bg-clip-text text-transparent">Cookie Policy</h1>

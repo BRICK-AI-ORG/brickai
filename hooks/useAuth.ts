@@ -109,6 +109,20 @@ export function useAuth(): UseAuthReturn {
   };
 
   const updateSessionState = async (newSession: any) => {
+    // Validate server-side that the auth user still exists; if not, sign out and clear local token
+    if (newSession?.access_token) {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data?.user) {
+          await supabase.auth.signOut();
+          newSession = null;
+        }
+      } catch {
+        await supabase.auth.signOut();
+        newSession = null;
+      }
+    }
+
     setSession(newSession);
     setIsLoggedIn(!!newSession);
 
@@ -176,7 +190,7 @@ export function useAuth(): UseAuthReturn {
 
   const handleGoogleLogin = async () => {
     try {
-      setIsAuthBusy(true);
+      // Avoid toggling busy state to prevent UI flash before redirect
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -187,8 +201,6 @@ export function useAuth(): UseAuthReturn {
     } catch (error: any) {
       setError(error.message);
       console.error("Error with Google login:", error);
-    } finally {
-      setIsAuthBusy(false);
     }
   };
 
@@ -229,10 +241,16 @@ export function useAuth(): UseAuthReturn {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        await updateSessionState(session);
+        const { data: { session } } = await supabase.auth.getSession();
+        // Validate token against server user
+        if (session?.access_token) {
+          const { data, error } = await supabase.auth.getUser();
+          if (error || !data?.user) {
+            await supabase.auth.signOut();
+          }
+        }
+        const { data: { session: fresh } } = await supabase.auth.getSession();
+        await updateSessionState(fresh);
       } catch (error: any) {
         console.error("Error initializing auth:", error);
         setError(error.message);
@@ -242,9 +260,7 @@ export function useAuth(): UseAuthReturn {
 
     initAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       updateSessionState(session);
     });
 

@@ -26,7 +26,7 @@ import SmokyBG from "@/components/SmokyBG";
 
 export default function AboutPage() {
   return (
-    <section className="py-16">
+    <section className="pt-10 pb-16">
       <div className="mx-auto max-w-[1600px] px-2 sm:px-4">
         {/* Hero */}
         <div className="group relative overflow-hidden rounded-2xl border bg-background/60 p-6 sm:p-10 text-center transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_0_1px_rgba(170,46,226,0.35)_inset,0_20px_50px_-20px_rgba(34,211,238,0.35)]">

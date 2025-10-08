@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import {
   Menu,
   X,
@@ -29,43 +29,47 @@ function NavIcon({ active }: { active: boolean }) {
 export function AppSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  // null = follow breakpoint defaults (tablet expanded, desktop collapsed)
-  const [collapsed, setCollapsed] = useState<boolean | null>(null);
+  // Collapsed by default across desktop breakpoints
+  const [collapsed, setCollapsed] = useState<boolean>(true);
   const isActive = (href: string) => pathname === href;
 
-  const navItems = useMemo(
+  const primaryNav = useMemo(
     () => [
       { href: "/app/hub", label: "Hub", Icon: LayoutDashboard },
-      { href: "/app/terms-and-conditions", label: "Terms", Icon: FileText },
+    ],
+    []
+  );
+  const secondaryNav = useMemo(
+    () => [
+      { href: "/app/terms-and-conditions", label: "T&Cs", Icon: FileText },
       { href: "/app/privacy-policy", label: "Privacy", Icon: Shield },
       { href: "/app/cookie-policy", label: "Cookies", Icon: Cookie },
     ],
     []
   );
 
-  const widthClass = collapsed === null ? "md:w-56 lg:w-16" : collapsed ? "w-16" : "w-56";
-  const allowHoverExpand = collapsed !== false; // expand on hover unless forced expanded
+  const widthClass = collapsed ? "w-16" : "w-56";
+  const allowHoverExpand = collapsed !== false; // expand on hover when collapsed
 
   const labelClass = (href: string) => {
-    if (collapsed === false) return "inline ml-2";
-    if (collapsed === true) return "hidden";
-    // default: tablet shows, desktop only on hover
-    return `hidden md:inline lg:hidden ${allowHoverExpand ? "group-hover:lg:inline" : ""} ml-2`;
+    if (!collapsed) return "inline ml-2";
+    // collapsed: reveal labels on hover at large screens
+    return `${allowHoverExpand ? "hidden lg:group-hover:inline" : "hidden"} ml-2`;
   };
 
-  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+  const NavLinks = ({ items, onClick, showLabels = false }: { items: { href: string; label: string; Icon: any }[]; onClick?: () => void; showLabels?: boolean }) => (
     <>
-      {navItems.map(({ href, label, Icon }) => (
+      {items.map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}
           aria-label={label}
-          className="relative flex items-center h-10 rounded-md hover:bg-white/10 px-2"
+          className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
           onClick={onClick}
         >
           <NavIcon active={isActive(href)} />
-          <Icon className={`h-5 w-5 ${isActive(href) ? "text-white" : "text-white/80"}`} />
-          <span className={`text-sm text-white/90 ${labelClass(href)}`}>{label}</span>
+          <Icon className={`h-7 w-7 shrink-0 ${isActive(href) ? "text-white" : "text-white/80"}`} />
+          <span className={`text-sm text-white/90 ${showLabels ? "inline ml-2" : labelClass(href)}`}>{label}</span>
         </Link>
       ))}
     </>
@@ -74,7 +78,7 @@ export function AppSidebar() {
   return (
     <>
       {/* Mobile top bar with hamburger */}
-      <div className="md:hidden sticky top-0 z-20 -mx-2 sm:mx-0">
+      <div className="md:hidden sticky top-0 z-30 w-full relative">
         <div className="flex items-center justify-between bg-[#171717] border-b border-white/10 px-3 py-2 rounded-md">
           <Link href="/app/hub" className="flex items-center gap-2" aria-label="BrickAI">
             <Image src="/favicon.png" alt="BrickAI" width={24} height={24} className="w-6 h-6" />
@@ -84,36 +88,41 @@ export function AppSidebar() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Open menu"
             aria-expanded={mobileOpen}
-            className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-white/10"
+            className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-white/10 touch-manipulation"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
         {mobileOpen && (
-          <div className="bg-[#171717] border-b border-white/10 px-3 py-2 rounded-md mt-1">
-            <div className="flex items-center gap-2">
-              <NavLinks onClick={() => setMobileOpen(false)} />
-              <div className="ml-auto">
-                <Link
-                  href="/app/profile"
-                  aria-label="Profile"
-                  className="relative flex items-center justify-center h-10 w-10 rounded-md hover:bg-white/10"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <UserCircle className={`h-5 w-5 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
-                </Link>
-              </div>
+          <div className="absolute left-0 right-0 top-full z-40 bg-[#171717] border border-white/10 rounded-md p-2 shadow-lg animate-[dropdown_180ms_ease-out] origin-top transform-gpu will-change-transform">
+            <div className="flex flex-col gap-1">
+              <NavLinks items={[...primaryNav, ...secondaryNav]} onClick={() => setMobileOpen(false)} showLabels />
+              <Link
+                href="/app/profile"
+                aria-label="Profile"
+                className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
+                onClick={() => setMobileOpen(false)}
+              >
+                <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
+                <span className="text-sm text-white/90 inline ml-2">Profile</span>
+              </Link>
             </div>
+            <style jsx>{`
+              @keyframes dropdown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+            `}</style>
           </div>
         )}
       </div>
 
       {/* Tablet/Desktop pinned sidebar with hover/toggle expansion */}
-      <aside
-        className={`hidden md:flex group flex-col justify-between shrink-0 ${widthClass} ${
-          allowHoverExpand ? "lg:hover:w-56" : ""
-        } transition-all duration-200`}
-      >
+      <div className="relative hidden md:block shrink-0 sticky top-0 self-start z-40">
+        <aside
+          className={`group flex flex-col justify-between ${widthClass} ${
+            allowHoverExpand ? "lg:hover:w-56" : ""
+          } transition-[width] duration-200 bg-[#171717] border-r border-white/10 px-2 py-2 h-[100dvh] overflow-y-auto overflow-x-hidden`}
+          aria-label="Hubbar"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
+        >
         <div>
           <Link
             href="/app/hub"
@@ -134,35 +143,45 @@ export function AppSidebar() {
             </span>
           </Link>
           <nav className="flex flex-col gap-1">
-            <NavLinks />
+            <NavLinks items={primaryNav} />
           </nav>
         </div>
-        <div className="flex items-center gap-1 px-2 pb-2">
-          <button
-            type="button"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={collapsed === false}
-            onClick={() => setCollapsed((v) => (v === null ? false : !v))}
-            className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-white/10"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
-              <ChevronLeft className="h-5 w-5" />
-            )}
-          </button>
-          <Link
-            href="/app/profile"
-            aria-label="Profile"
-            className="relative flex items-center h-10 rounded-md hover:bg-white/10 px-2 ml-auto"
-          >
-            <UserCircle className={`h-5 w-5 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
-            <span className={`text-sm text-white/90 ${labelClass("/app/profile")}`}>Profile</span>
-          </Link>
+        <div className="px-2 pb-2">
+          <nav className="flex flex-col gap-1 mb-2">
+            <NavLinks items={secondaryNav} />
+          </nav>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/app/profile"
+              aria-label="Profile"
+              className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2"
+            >
+              <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
+              <span className={`text-sm text-white/90 ${labelClass("/app/profile")}`}>Profile</span>
+            </Link>
+          </div>
         </div>
-      </aside>
+        
+        </aside>
+        {/* Toggle button outside the sidebar, poking out on the right */}
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand hubbar" : "Collapse hubbar"}
+          aria-expanded={collapsed === false}
+          onClick={() => setCollapsed((v) => !v)}
+          className="absolute top-1/2 -translate-y-1/2 left-full -ml-px inline-flex items-center justify-center h-10 w-7 rounded-r-md border border-white/15 bg-white/5 hover:bg-white/10 text-white/90 shadow-sm z-50 pointer-events-auto"
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
+        </button>
+      </div>
     </>
   );
 }
 
 export default AppSidebar;
+export const Hubbar = memo(AppSidebar);

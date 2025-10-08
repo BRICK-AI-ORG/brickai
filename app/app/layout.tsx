@@ -1,7 +1,5 @@
-"use client";
-
 import { RouteGuard } from "@/components/RouteGuard";
-import AppSidebar from "@/components/AppSidebar";
+import { Hubbar } from "@/components/AppSidebar";
 
 export default function AppLayout({
   children,
@@ -10,9 +8,11 @@ export default function AppLayout({
 }) {
   return (
     <RouteGuard>
-      <div className="flex gap-3 md:gap-4">
-        <AppSidebar />
-        <div className="flex-1 min-w-0">{children}</div>
+      <div className="min-h-screen flex flex-col md:flex-row gap-3 md:gap-4">
+        <Hubbar />
+        <div className="flex-1 min-w-0 pt-10 pb-4 sm:pb-6 px-3 md:px-4" style={{ contentVisibility: "auto" }}>
+          {children}
+        </div>
       </div>
     </RouteGuard>
   );

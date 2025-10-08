@@ -25,6 +25,8 @@ type Blob = {
   phy: number; // phase y
   r: number; // radius in px (relative, scaled by min(w,h))
   color: string;
+  sprite?: any;
+  radPx?: number;
 };
 
 export default function SmokyBG({
@@ -54,6 +56,9 @@ export default function SmokyBG({
 
     let width = 0;
     let height = 0;
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const visibleRef = { current: true } as { current: boolean };
+    const pageVisible = { current: document.visibilityState !== "hidden" } as { current: boolean };
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
     const rand = (a: number, b: number) => Math.random() * (b - a) + a;
@@ -93,8 +98,46 @@ export default function SmokyBG({
     resize();
     const ro = new ResizeObserver(() => {
       resize();
+      // rebuild sprites on size change
+      const minDim = Math.min(width, height);
+      for (const b of list.current) {
+        const radPx = b.r * minDim;
+        const size = Math.max(2, Math.ceil(radPx * 2));
+        const spr: any = (typeof (window as any).OffscreenCanvas !== "undefined") ? new (window as any).OffscreenCanvas(size, size) : document.createElement("canvas");
+        spr.width = size;
+        spr.height = size;
+        const sctx = spr.getContext("2d", { alpha: true });
+        if (sctx) {
+          const g = sctx.createRadialGradient(radPx, radPx, 0, radPx, radPx, radPx);
+          const c = b.color;
+          g.addColorStop(0, `rgba(${parseInt(c.slice(1,3),16)}, ${parseInt(c.slice(3,5),16)}, ${parseInt(c.slice(5,7),16)}, ${Math.max(0, Math.min(1, centerAlpha))})`);
+          g.addColorStop(1, `rgba(${parseInt(c.slice(1,3),16)}, ${parseInt(c.slice(3,5),16)}, ${parseInt(c.slice(5,7),16)}, 0)`);
+          sctx.clearRect(0, 0, size, size);
+          sctx.fillStyle = g as any;
+          sctx.beginPath();
+          sctx.arc(radPx, radPx, radPx, 0, Math.PI * 2);
+          sctx.fill();
+        }
+        b.radPx = radPx;
+        b.sprite = spr;
+      }
     });
     ro.observe(wrap);
+
+    // Pause when offscreen
+    const io = new IntersectionObserver(
+      (entries) => {
+        visibleRef.current = entries[0]?.isIntersecting ?? true;
+      },
+      { root: null, threshold: 0 }
+    );
+    io.observe(wrap);
+
+    // Pause when tab hidden
+    const visHandler = () => {
+      pageVisible.current = document.visibilityState !== "hidden";
+    };
+    document.addEventListener("visibilitychange", visHandler);
 
     const hexToRGBA = (hex: string, a: number) => {
       const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -105,35 +148,74 @@ export default function SmokyBG({
       return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a))})`;
     };
 
+    // initial sprite build (after first resize)
+    {
+      const minDim = Math.min(width, height);
+      for (const b of list.current) {
+        const radPx = b.r * minDim;
+        const size = Math.max(2, Math.ceil(radPx * 2));
+        const spr: any = (typeof (window as any).OffscreenCanvas !== "undefined") ? new (window as any).OffscreenCanvas(size, size) : document.createElement("canvas");
+        spr.width = size;
+        spr.height = size;
+        const sctx = spr.getContext("2d", { alpha: true });
+        if (sctx) {
+          const g = sctx.createRadialGradient(radPx, radPx, 0, radPx, radPx, radPx);
+          const c = b.color;
+          g.addColorStop(0, hexToRGBA(c, centerAlpha));
+          g.addColorStop(1, hexToRGBA(c, 0));
+          sctx.clearRect(0, 0, size, size);
+          sctx.fillStyle = g as any;
+          sctx.beginPath();
+          sctx.arc(radPx, radPx, radPx, 0, Math.PI * 2);
+          sctx.fill();
+        }
+        b.radPx = radPx;
+        b.sprite = spr;
+      }
+    }
+
     const step = (now: number) => {
       if (!t0.current) t0.current = now;
       const t = (now - t0.current) / 1000; // seconds
 
-      ctx.clearRect(0, 0, width, height);
-      ctx.globalCompositeOperation = "lighter";
-
-      const minDim = Math.min(width, height);
-      for (const b of list.current) {
-        const x = (b.bx + Math.cos(b.phx + t * b.fx * speed) * b.ax) * width;
-        const y = (b.by + Math.sin(b.phy + t * b.fy * speed) * b.ay) * height;
-        const rad = b.r * minDim;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
-        const c = b.color;
-        g.addColorStop(0, hexToRGBA(c, centerAlpha)); // near center
-        g.addColorStop(1, hexToRGBA(c, 0)); // fade out
-        ctx.fillStyle = g as any;
-        ctx.beginPath();
-        ctx.arc(x, y, rad, 0, Math.PI * 2);
-        ctx.fill();
+      if (!prefersReducedMotion && visibleRef.current && pageVisible.current) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.globalCompositeOperation = "lighter";
+        for (const b of list.current) {
+          const x = (b.bx + Math.cos(b.phx + t * b.fx * speed) * b.ax) * width;
+          const y = (b.by + Math.sin(b.phy + t * b.fy * speed) * b.ay) * height;
+          const rad = b.radPx || 0;
+          const spr = b.sprite as any;
+          if (spr) {
+            ctx.drawImage(spr, Math.round(x - rad), Math.round(y - rad));
+          }
+        }
       }
 
       raf.current = requestAnimationFrame(step);
     };
 
-    raf.current = requestAnimationFrame(step);
+    if (!prefersReducedMotion) {
+      raf.current = requestAnimationFrame(step);
+    } else {
+      // Render one static frame when reduced motion is set
+      ctx.clearRect(0, 0, width, height);
+      ctx.globalCompositeOperation = "lighter";
+      for (const b of list.current) {
+        const x = b.bx * width;
+        const y = b.by * height;
+        const rad = b.radPx || 0;
+        const spr = b.sprite as any;
+        if (spr) {
+          ctx.drawImage(spr, Math.round(x - rad), Math.round(y - rad));
+        }
+      }
+    }
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current);
       ro.disconnect();
+      io.disconnect();
+      document.removeEventListener("visibilitychange", visHandler);
     };
   }, [blobs, colors, speed, minR, maxR, centerAlpha]);
 
@@ -141,10 +223,11 @@ export default function SmokyBG({
     <div ref={wrapRef} className={"pointer-events-none " + (className ?? "")}> 
       <canvas
         ref={canvasRef}
-        className="w-full h-full mix-blend-screen"
+        className="w-full h-full mix-blend-screen will-change-transform"
         style={{ filter: `blur(${blurPx}px) brightness(1.05)`, opacity }}
         aria-hidden
       />
     </div>
   );
 }
+

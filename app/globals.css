@@ -84,6 +84,14 @@ body {
   }
 }
 
+/* Improve mobile tap responsiveness and reduce highlight flash */
+@layer base {
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
 /* Auth card gets a purple outline when showing confirm email notice */
 .outer-auth-card:has([data-confirm-email]) {
   border-color: rgba(170, 46, 226, 0.6) !important;
@@ -276,4 +284,14 @@ body {
   0%   { transform: translate3d(0, 0, 0); }
   50%  { transform: translate3d(-2%, 0, 0); }
   100% { transform: translate3d(2%, 0, 0); }
+}
+
+/* GPU/compositor hints for animated layers */
+.pricing-smoke,
+.about-smoke,
+.about-smoke-2 {
+  will-change: transform;
+}
+.team-particles {
+  will-change: transform, opacity;
 }

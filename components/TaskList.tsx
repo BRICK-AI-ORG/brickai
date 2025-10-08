@@ -12,9 +12,12 @@ interface TaskListProps {
   tasks: Task[];
   onDelete: (taskId: string) => Promise<void>;
   onToggleComplete: (taskId: string, completed: boolean) => Promise<void>;
+  onEdit?: (taskId: string) => void;
 }
 
-const TaskList = ({ tasks, onDelete, onToggleComplete }: TaskListProps) => {
+const TaskList = ({ tasks, onDelete, onToggleComplete, onEdit }: TaskListProps) => {
+  const todos = tasks.filter((t) => !t.completed);
+  const done = tasks.filter((t) => !!t.completed);
   return (
     <Table>
       <TableHeader>
@@ -27,12 +30,30 @@ const TaskList = ({ tasks, onDelete, onToggleComplete }: TaskListProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {tasks.map((task) => (
+        <TableRow className="hover:bg-transparent bg-muted/30">
+          <td colSpan={5} className="py-2 text-[10px] uppercase tracking-wider text-muted-foreground">To Do:</td>
+        </TableRow>
+        {todos.map((task) => (
           <TaskRow
             key={task.task_id}
             task={task}
             onDelete={onDelete}
             onToggleComplete={onToggleComplete}
+            onEdit={onEdit}
+          />
+        ))}
+        {done.length > 0 && (
+          <TableRow className="hover:bg-transparent bg-muted/30">
+            <td colSpan={5} className="py-2 text-[10px] uppercase tracking-wider text-muted-foreground">Completed</td>
+          </TableRow>
+        )}
+        {done.map((task) => (
+          <TaskRow
+            key={task.task_id}
+            task={task}
+            onDelete={onDelete}
+            onToggleComplete={onToggleComplete}
+            onEdit={onEdit}
           />
         ))}
       </TableBody>

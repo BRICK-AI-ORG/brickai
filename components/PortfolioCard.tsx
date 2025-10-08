@@ -15,11 +15,17 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import TaskEditor from "@/components/TaskEditor";
 
 interface PortfolioCardProps {
   portfolio: Portfolio;
   tasks: Task[];
-  onCreateTask: (portfolioId: string, title: string, description: string) => Promise<void>;
+  onCreateTask: (
+    portfolioId: string,
+    title: string,
+    description: string,
+    options?: { dueDate?: string | null; imageFile?: File | null }
+  ) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleComplete: (taskId: string, completed: boolean) => Promise<void>;
   onEditPortfolio?: (
@@ -40,13 +46,22 @@ export function PortfolioCard({
 }: PortfolioCardProps) {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [name, setName] = useState(portfolio.name);
   const [description, setDescription] = useState(portfolio.description ?? "");
   const [pwd, setPwd] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const handleCreate = async (title: string, description: string) => {
-    await onCreateTask(portfolio.portfolio_id, title, description);
+  const handleCreate = async (
+    title: string,
+    description: string,
+    dueDate?: string | null,
+    imageFile?: File | null
+  ) => {
+    await onCreateTask(portfolio.portfolio_id, title, description, {
+      dueDate: dueDate ?? null,
+      imageFile: imageFile ?? null,
+    });
     setOpen(false);
   };
 
@@ -84,7 +99,7 @@ export function PortfolioCard({
                   <div className="flex justify-end gap-2">
                     <Button
                       onClick={async () => {
-                        await onEditPortfolio(portfolio.portfolio_id, {
+                        await onEditPortfolio!(portfolio.portfolio_id, {
                           name: name.trim(),
                           description: description.trim() || null,
                         });
@@ -154,8 +169,20 @@ export function PortfolioCard({
           tasks={tasks}
           onDelete={onDeleteTask}
           onToggleComplete={onToggleComplete}
+          onEdit={(taskId) => setEditingTaskId(taskId)}
         />
       </div>
+      <Dialog open={!!editingTaskId} onOpenChange={(o) => !o && setEditingTaskId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>Update task details and attachments.</DialogDescription>
+          </DialogHeader>
+          {editingTaskId && (
+            <TaskEditor taskId={editingTaskId} onClose={() => setEditingTaskId(null)} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

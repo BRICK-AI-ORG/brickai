@@ -90,6 +90,7 @@ Deno.serve(async (req) => {
         title,
         description,
         completed: false,
+        status: 'todo',
         user_id: user.id,
         portfolio_id: portfolio_id ?? null,
       })
@@ -103,8 +104,10 @@ Deno.serve(async (req) => {
       apiKey: OPENAI_API_KEY,
     });
 
-    // Get label suggestion from OpenAI
-    const prompt = `Based on this task title: "${title}" and description: "${description}", suggest ONE of these labels: work, personal, priority, shopping, home. Reply with just the label word and nothing else.`;
+    // Get label suggestion from OpenAI (property/admin/finance domain)
+    const prompt = `You are classifying property management tasks. Based on the task title: "${title}" and description: "${description}", choose EXACTLY ONE best-fit label from this set:
+    maintenance, compliance, finance, admin, lettings, inspection, refurb, legal, operations, tenant.
+    Return only the lowercase label, no punctuation or extra words.`;
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
@@ -120,7 +123,24 @@ Deno.serve(async (req) => {
     console.log(`✨ AI Suggested Label: ${suggestedLabel}`);
 
     // Validate the label
-    const validLabels = ["work", "personal", "priority", "shopping", "home"];
+    const validLabels = [
+      "maintenance",
+      "compliance",
+      "finance",
+      "admin",
+      "lettings",
+      "inspection",
+      "refurb",
+      "legal",
+      "operations",
+      "tenant",
+      // allow legacy labels to keep old data valid
+      "work",
+      "personal",
+      "priority",
+      "shopping",
+      "home",
+    ];
     const label = validLabels.includes(suggestedLabel) ? suggestedLabel : null;
 
     // Update the task with the suggested label

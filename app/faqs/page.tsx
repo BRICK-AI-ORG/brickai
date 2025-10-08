@@ -65,7 +65,7 @@ export default function FAQsPage() {
   };
 
   return (
-    <section className="py-6">
+    <section className="pt-10 pb-6">
       <div className="mx-auto max-w-[1000px]">
         <div className="mb-6 text-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">FAQs</h1>

@@ -12,6 +12,8 @@ import { usePathname, useRouter } from "next/navigation";
 import SessionActivityMonitor from "@/components/SessionActivityMonitor";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import ZoomLock from "@/components/ZoomLock";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +25,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn, isLoading } = useAuth();
+  const { status, loading: statusLoading } = useProfileCompletion();
   const isAppRoute = pathname?.startsWith("/app") ?? false;
   const wideRoutes = new Set([
     "/home",
@@ -37,23 +40,29 @@ export default function RootLayout({
     "/app/hub",
   ]);
   const isWide = pathname ? wideRoutes.has(pathname) || pathname.startsWith("/app") : false;
-  const yPad = pathname === "/home" ? "py-0" : "py-8";
   const isAuth = pathname === "/login" || pathname === "/create-account";
+  // Top padding:
+  // - /home manages its own top spacing in-page (pt-10 on first section)
+  // - Auth pages get a consistent pt-10 from the layout
+  // - Other marketing pages manage their own top padding (set in-page)
+  const yPadTop = pathname === "/home" ? "pt-0" : (isAuth ? "pt-10" : "pt-0");
+  const yPadBottom = "pb-8";
 
   // If logged in, prevent access to any non-/app routes
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || statusLoading) return;
     if (isLoggedIn && pathname && !pathname.startsWith("/app")) {
-      router.replace("/app/hub");
+      router.replace(status.complete ? "/app/hub" : "/app/welcome/complete-profile");
     }
-  }, [isLoggedIn, isLoading, pathname, router]);
+  }, [isLoggedIn, isLoading, statusLoading, status?.complete, pathname, router]);
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-[#121212]`}>
         <TitleSetter />
+        <ZoomLock />
         <div className="relative isolate flex flex-col min-h-screen">
-          {/* Full-viewport smoke background for /home and auth pages */}
-          {(pathname === "/home" || isAuth) && (
+          {/* Full-viewport smoke background for /home, auth pages, and all /app pages when logged in */}
+          {(pathname === "/home" || isAuth || (isAppRoute && isLoggedIn)) && (
             <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <SmokyBG
                 className="absolute inset-0"
@@ -70,9 +79,14 @@ export default function RootLayout({
           {!isAppRoute && <Header />}
           <main
             className={
-              isWide
-                ? `relative z-10 flex-grow mx-auto max-w-screen-2xl px-2 sm:px-4 ${yPad}`
-                : `relative z-10 flex-grow container mx-auto px-4 ${yPad}`
+              // Marketing + wide pages stay centered with a max width.
+              // App (/app/**) pages should span the full viewport with no top padding
+              // so the sidebar pins flush to the top.
+              pathname?.startsWith("/app")
+                ? `relative z-10 flex-grow w-full px-0 sm:px-0 py-0`
+                : isWide
+                ? `relative z-10 flex-grow mx-auto max-w-screen-2xl px-2 sm:px-4 ${yPadTop} ${yPadBottom}`
+                : `relative z-10 flex-grow container mx-auto px-4 ${yPadTop} ${yPadBottom}`
             }
           >
             {isWide ? (

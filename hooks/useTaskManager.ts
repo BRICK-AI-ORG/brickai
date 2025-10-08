@@ -74,10 +74,12 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
       const taskData = taskToSave || task;
       if (!taskData) throw new Error("No task data to save");
 
+      const nextStatus = (taskData as any).completed ? 'done' : ((taskData as any).status ?? 'todo');
       const safeUpdate: Partial<Task> & { due_date?: string; updated_at: string } = {
         title: taskData.title,
         description: taskData.description,
         completed: taskData.completed ?? false,
+        status: nextStatus as any,
         label: (taskData as any).label,
         // Allow image_url to be updated via internal flows (upload/remove)
         image_url: (taskToSave as any)?.image_url ?? task?.image_url ?? null,
@@ -231,13 +233,13 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     try {
       const { error } = await supabase
         .from("tasks")
-        .update({ completed })
+        .update({ completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() })
         .eq("task_id", taskIdToToggle);
 
       if (error) throw error;
       setTasks(
         tasks.map((t) =>
-          t.task_id === taskIdToToggle ? { ...t, completed } : t
+          t.task_id === taskIdToToggle ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() } : t
         )
       );
       setError(null);

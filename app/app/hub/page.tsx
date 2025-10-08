@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import FunLoader from "@/components/FunLoader";
 
 export default function HubPage() {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function HubPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-3xl font-bold">Your Hub</h1>
           <p className="text-muted-foreground">
@@ -56,9 +57,9 @@ export default function HubPage() {
       </div>
 
       {loading ? (
-        <div>Loading...</div>
+        <FunLoader />
       ) : items.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {items.map(({ portfolio, tasks }) => (
             <PortfolioCard
               key={portfolio.portfolio_id}

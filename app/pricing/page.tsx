@@ -12,7 +12,7 @@ import EqualizeHeights from "@/components/EqualizeHeights";
 
 export default function PricingPage() {
   return (
-    <section className="py-16">
+    <section className="pt-10 pb-16">
       <EqualizeHeights targetClass="pricing-card" />
       <div className="mx-auto max-w-[1600px] px-2 sm:px-4">
         <div className="text-center mb-12">

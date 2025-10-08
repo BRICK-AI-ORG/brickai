@@ -142,7 +142,12 @@ export function usePortfolioManager() {
 
   const FUNCTION_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-task-with-ai`;
 
-  async function createTask(portfolioId: string, title: string, description: string) {
+  async function createTask(
+    portfolioId: string,
+    title: string,
+    description: string,
+    options?: { dueDate?: string | null; imageFile?: File | null }
+  ) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -170,6 +175,7 @@ export function usePortfolioManager() {
           title,
           description,
           completed: false,
+          status: 'todo',
           user_id: session.user.id,
           portfolio_id: portfolioId,
         })
@@ -178,14 +184,45 @@ export function usePortfolioManager() {
       if (error) throw error;
       task = data as Task;
     }
+
+    // Optional: update due date
+    if (options?.dueDate) {
+      const { data: upd, error: dueErr } = await supabase
+        .from("tasks")
+        .update({ due_date: options.dueDate, updated_at: new Date().toISOString() })
+        .eq("task_id", task!.task_id)
+        .select()
+        .single();
+      if (!dueErr && upd) task = upd as Task;
+    }
+
+    // Optional: upload image and update image_url
+    if (options?.imageFile) {
+      const file = options.imageFile;
+      const ext = file.name.split(".").pop();
+      const fileName = `${session.user.id}/${task!.task_id}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("task-attachments")
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+      if (!uploadError) {
+        const { data: upd2, error: imgErr } = await supabase
+          .from("tasks")
+          .update({ image_url: fileName, updated_at: new Date().toISOString() })
+          .eq("task_id", task!.task_id)
+          .select()
+          .single();
+        if (!imgErr && upd2) task = upd2 as Task;
+      }
+    }
+
     setItems((prev) =>
       prev.map((it) =>
         it.portfolio.portfolio_id === portfolioId
-          ? { ...it, tasks: [task, ...it.tasks] }
+          ? { ...it, tasks: [task!, ...it.tasks] }
           : it
       )
     );
-    return task;
+    return task!;
   }
 
   async function deleteTask(taskId: string) {
@@ -199,13 +236,13 @@ export function usePortfolioManager() {
   async function toggleTaskComplete(taskId: string, completed: boolean) {
     const { error } = await supabase
       .from("tasks")
-      .update({ completed })
+      .update({ completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() })
       .eq("task_id", taskId);
     if (error) throw error;
     setItems((prev) =>
       prev.map((it) => ({
         ...it,
-        tasks: it.tasks.map((t) => (t.task_id === taskId ? { ...t, completed } : t)),
+        tasks: it.tasks.map((t) => (t.task_id === taskId ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() } : t)),
       }))
     );
   }

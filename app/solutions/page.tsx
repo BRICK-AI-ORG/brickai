@@ -7,7 +7,7 @@ import EqualizeHeights from "@/components/EqualizeHeights";
 
 export default function SolutionsPage() {
   return (
-    <section className="py-16">
+    <section className="pt-10 pb-16">
       <EqualizeHeights targetClass="solutions-card" />
       <EqualizeHeights targetClass="solutions-outcome-card" />
       <div className="mx-auto max-w-[1600px] px-2 sm:px-4">
