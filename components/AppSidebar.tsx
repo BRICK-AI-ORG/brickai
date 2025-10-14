@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useMemo, useState, memo } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import {
   Menu,
   X,
@@ -23,12 +23,43 @@ function NavIcon({ active }: { active: boolean }) {
   );
 }
 
+const HUBBAR_STATE_KEY = "brickai.hubbarCollapsed";
+
 export function AppSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   // Collapsed by default across desktop breakpoints
   const [collapsed, setCollapsed] = useState<boolean>(true);
   const isActive = (href: string) => pathname === href;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(HUBBAR_STATE_KEY);
+    if (stored === null) return;
+    const preferredCollapsed = stored !== "false";
+    setCollapsed((prev) => (prev === preferredCollapsed ? prev : preferredCollapsed));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(HUBBAR_STATE_KEY, String(collapsed));
+    } catch (err) {
+      console.warn("Failed to persist hubbar state", err);
+    }
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (event: StorageEvent) => {
+      if (event.key !== HUBBAR_STATE_KEY) return;
+      if (event.storageArea !== window.localStorage) return;
+      const nextCollapsed = event.newValue !== "false";
+      setCollapsed((prev) => (prev === nextCollapsed ? prev : nextCollapsed));
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
 
   const primaryNav = useMemo(
     () => [
