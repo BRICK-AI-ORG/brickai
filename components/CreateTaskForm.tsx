@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +8,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 
 interface CreateTaskFormProps {
@@ -14,7 +22,8 @@ interface CreateTaskFormProps {
     title: string,
     description: string,
     dueDate?: string | null,
-    imageFile?: File | null
+    imageFiles?: File[] | null,
+    priority?: string | null
   ) => Promise<void>;
 }
 
@@ -23,7 +32,9 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState<string>("");
   const [dueDateObj, setDueDateObj] = useState<Date | undefined>(undefined);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [priority, setPriority] = useState<string>("medium");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,12 +43,15 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      await onSubmit(title, description, dueDate || null, imageFile);
+      await onSubmit(title, description, dueDate || null, imageFiles, priority);
       setTitle("");
       setDescription("");
       setDueDate("");
       setDueDateObj(undefined);
-      setImageFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setImageFiles([]);
+      setPreviewUrl(null);
+      setPriority("medium");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create task");
     } finally {
@@ -62,12 +76,14 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
         <Textarea
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
+          maxLength={2000}
           placeholder="Enter task description"
-          rows={3}
+          rows={4}
         />
+        <div className="text-xs text-muted-foreground mt-1 text-right">{description.length}/2000</div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <Label>Due Date</Label>
           <Popover>
@@ -75,13 +91,18 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                className={cn("w-full justify-start text-left font-normal", !dueDateObj && "text-muted-foreground")}
+                className={cn(
+                  "w-full h-9 justify-start text-left font-normal overflow-hidden",
+                  !dueDateObj && "text-muted-foreground"
+                )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDateObj ? format(dueDateObj, "PPP") : <span>Pick a date</span>}
+                <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                <span className="truncate block max-w-full">
+                  {dueDateObj ? format(dueDateObj, "PPP") : "Pick a date"}
+                </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="z-50 w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={dueDateObj}
@@ -99,11 +120,53 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
           <Input
             id="image"
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []).slice(0, 5);
+              setImageFiles(files);
+              if (previewUrl) URL.revokeObjectURL(previewUrl);
+              setPreviewUrl(files[0] ? URL.createObjectURL(files[0]) : null);
+            }}
           />
+          {previewUrl && (
+            <div className="mt-2 relative border rounded-md h-44 md:h-56 bg-muted overflow-hidden">
+              <Image src={previewUrl} alt="Preview" fill className="object-contain" unoptimized />
+            </div>
+          )}
+          {imageFiles.length > 1 && (
+            <div className="text-xs text-muted-foreground mt-1">{imageFiles.length} files selected</div>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="priority">Priority</Label>
+          <Select value={priority} onValueChange={setPriority}>
+            <SelectTrigger className="w-full h-9">
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="urgent">
+                <span className="text-red-600 mr-2">🔥</span> Urgent
+              </SelectItem>
+              <SelectItem value="high">
+                <span className="text-orange-600 mr-2">⚠️</span> High
+              </SelectItem>
+              <SelectItem value="medium">
+                <span className="text-amber-600 mr-2">➖</span> Medium
+              </SelectItem>
+              <SelectItem value="low">
+                <span className="text-gray-600 mr-2">💤</span> Low
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      <style jsx>{`
+        :global(textarea) {
+          resize: vertical;
+          max-height: 12rem;
+        }
+      `}</style>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Creating..." : "Create Task"}
       </Button>
@@ -111,3 +174,4 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
     </form>
   );
 }
+

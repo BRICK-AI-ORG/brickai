@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CreditCard, LogOut, MapPin } from "lucide-react";
+import { CreditCard, LogOut, MapPin, FileText, Shield, Cookie } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FunLoader from "@/components/FunLoader";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -205,6 +206,26 @@ export default function Profile() {
           </Button>
         </CardContent>
       </Card>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button asChild variant="outline">
+          <Link href="/app/terms-and-conditions">
+            <FileText className="h-4 w-4" />
+            Terms &amp; Conditions
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/app/privacy-policy">
+            <Shield className="h-4 w-4" />
+            Privacy Policy
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/app/cookie-policy">
+            <Cookie className="h-4 w-4" />
+            Cookie Policy
+          </Link>
+        </Button>
+      </div>
       <div className="flex justify-end">
         <Button variant="outline" onClick={signOut}>
           <LogOut className="mr-2 h-4 w-4" />

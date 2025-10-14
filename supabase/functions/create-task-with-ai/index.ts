@@ -13,11 +13,11 @@ const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "http://localhost:30
   .map((s) => s.trim())
   .filter((s) => s.length > 0);
 
-function buildCorsHeaders(req: Request) {
+function buildCorsHeaders(req: Request, allowAny = false) {
   const origin = req.headers.get("origin") ?? "";
-  const allow = origin && ALLOWED_ORIGINS.includes(origin);
+  const allow = allowAny || (origin && ALLOWED_ORIGINS.includes(origin));
   return {
-    "Access-Control-Allow-Origin": allow ? origin : "null",
+    "Access-Control-Allow-Origin": allow ? (origin || "*") : allowAny ? "*" : "null",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
@@ -27,7 +27,8 @@ function buildCorsHeaders(req: Request) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+    // Be permissive on preflight to avoid dev-time CORS flakes
+    return new Response(null, { status: 204, headers: buildCorsHeaders(req, true) });
   }
   // Enforce CORS allow-list for non-OPTIONS requests
   const origin = req.headers.get("origin") ?? "";

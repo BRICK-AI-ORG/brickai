@@ -1,9 +1,11 @@
-import { Task } from "./models";
+import { Task, TaskImage } from "./models";
 import { BaseState } from "./auth";
 
 export interface TaskState extends BaseState {
   task: Task | null;
   date: Date | undefined;
+  images?: TaskImage[];
+  signedUrls?: Record<string, string>;
 }
 
 export interface TaskOperations {
@@ -12,6 +14,9 @@ export interface TaskOperations {
   saveTask: (taskToSave?: Task) => Promise<void>;
   uploadImage: (file: File) => Promise<void>;
   removeImage: () => Promise<void>;
+  uploadImages?: (files: File[]) => Promise<void>;
+  listImages?: (taskId: string) => Promise<void>;
+  removeImageById?: (imageId: string) => Promise<void>;
 }
 
 export interface TasksState extends BaseState {

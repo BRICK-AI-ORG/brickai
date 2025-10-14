@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 import { getLabelColors } from "@/lib/labels";
 import { Task } from "@/types/models";
+import { getPriorityColors } from "@/lib/priority";
 
 interface TaskRowProps {
   task: Task;
@@ -29,14 +30,31 @@ const TaskRow = ({ task, onDelete, onToggleComplete, onEdit }: TaskRowProps) => 
           }
         />
       </TableCell>
-      <TableCell className="py-2">
+      <TableCell className="py-2 align-top">
         <button
           type="button"
-          className={["hover:underline font-medium text-left", isCompleted ? "line-through" : ""].join(" ")}
+          className={[
+            "hover:underline font-medium text-left whitespace-normal break-words max-w-[28rem]",
+            isCompleted ? "line-through" : "",
+          ].join(" ")}
           onClick={() => onEdit?.(task.task_id)}
         >
           {task.title}
         </button>
+      </TableCell>
+      <TableCell className="py-2">
+        {task.priority && (
+          <Badge
+            variant="outline"
+            className={[
+              getPriorityColors(task.priority).bg,
+              getPriorityColors(task.priority).text,
+              getPriorityColors(task.priority).border,
+            ].join(" ")}
+          >
+            {String(task.priority).charAt(0).toUpperCase() + String(task.priority).slice(1)}
+          </Badge>
+        )}
       </TableCell>
       <TableCell className="py-2">
         {task.label && (

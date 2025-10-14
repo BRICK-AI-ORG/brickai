@@ -146,7 +146,7 @@ export function usePortfolioManager() {
     portfolioId: string,
     title: string,
     description: string,
-    options?: { dueDate?: string | null; imageFile?: File | null }
+    options?: { dueDate?: string | null; imageFiles?: File[] | null; priority?: string | null }
   ) {
     const {
       data: { session },
@@ -185,11 +185,14 @@ export function usePortfolioManager() {
       task = data as Task;
     }
 
-    // Optional: update due date
-    if (options?.dueDate) {
+    // Optional: update due date/priority in one roundtrip
+    if (options?.dueDate || options?.priority) {
+      const updates: any = { updated_at: new Date().toISOString() };
+      if (options?.dueDate) updates.due_date = options.dueDate;
+      if (options?.priority) updates.priority = options.priority;
       const { data: upd, error: dueErr } = await supabase
         .from("tasks")
-        .update({ due_date: options.dueDate, updated_at: new Date().toISOString() })
+        .update(updates)
         .eq("task_id", task!.task_id)
         .select()
         .single();
@@ -197,21 +200,17 @@ export function usePortfolioManager() {
     }
 
     // Optional: upload image and update image_url
-    if (options?.imageFile) {
-      const file = options.imageFile;
-      const ext = file.name.split(".").pop();
-      const fileName = `${session.user.id}/${task!.task_id}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("task-attachments")
-        .upload(fileName, file, { upsert: true, contentType: file.type });
-      if (!uploadError) {
-        const { data: upd2, error: imgErr } = await supabase
-          .from("tasks")
-          .update({ image_url: fileName, updated_at: new Date().toISOString() })
-          .eq("task_id", task!.task_id)
-          .select()
-          .single();
-        if (!imgErr && upd2) task = upd2 as Task;
+    if (options?.imageFiles && options.imageFiles.length > 0) {
+      const files = options.imageFiles.slice(0, 5);
+      for (const file of files) {
+        const ext = file.name.split(".").pop();
+        const path = `${session.user.id}/${task!.task_id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("task-attachments")
+          .upload(path, file, { upsert: false, contentType: file.type });
+        if (!uploadError) {
+          await supabase.from("task_images").insert({ task_id: task!.task_id, path });
+        }
       }
     }
 

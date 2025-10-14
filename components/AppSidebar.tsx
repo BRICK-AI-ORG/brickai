@@ -9,9 +9,6 @@ import {
   X,
   LayoutDashboard,
   UserCircle,
-  FileText,
-  Shield,
-  Cookie,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -36,14 +33,6 @@ export function AppSidebar() {
   const primaryNav = useMemo(
     () => [
       { href: "/app/hub", label: "Hub", Icon: LayoutDashboard },
-    ],
-    []
-  );
-  const secondaryNav = useMemo(
-    () => [
-      { href: "/app/terms-and-conditions", label: "T&Cs", Icon: FileText },
-      { href: "/app/privacy-policy", label: "Privacy", Icon: Shield },
-      { href: "/app/cookie-policy", label: "Cookies", Icon: Cookie },
     ],
     []
   );
@@ -96,7 +85,7 @@ export function AppSidebar() {
         {mobileOpen && (
           <div className="absolute left-0 right-0 top-full z-40 bg-[#171717] border border-white/10 rounded-md p-2 shadow-lg animate-[dropdown_180ms_ease-out] origin-top transform-gpu will-change-transform">
             <div className="flex flex-col gap-1">
-              <NavLinks items={[...primaryNav, ...secondaryNav]} onClick={() => setMobileOpen(false)} showLabels />
+              <NavLinks items={primaryNav} onClick={() => setMobileOpen(false)} showLabels />
               <Link
                 href="/app/profile"
                 aria-label="Profile"
@@ -123,45 +112,41 @@ export function AppSidebar() {
           aria-label="Hubbar"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
         >
-        <div>
-          <Link
-            href="/app/hub"
-            className="flex items-center h-12 px-2 mb-1"
-            aria-label="BrickAI"
-          >
-            <Image src="/favicon.png" alt="BrickAI" width={28} height={28} className="w-7 h-7" />
-            <span
-              className={
-                collapsed === false
-                  ? "inline ml-2 text-sm font-semibold"
-                  : collapsed === true
-                  ? "hidden"
-                  : `hidden md:inline lg:hidden ${allowHoverExpand ? "group-hover:lg:inline" : ""} ml-2 text-sm font-semibold`
-              }
-            >
-              BrickAI
-            </span>
-          </Link>
-          <nav className="flex flex-col gap-1">
-            <NavLinks items={primaryNav} />
-          </nav>
-        </div>
-        <div className="px-2 pb-2">
-          <nav className="flex flex-col gap-1 mb-2">
-            <NavLinks items={secondaryNav} />
-          </nav>
-          <div className="flex items-center gap-1">
+          <div>
             <Link
-              href="/app/profile"
-              aria-label="Profile"
-              className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2"
+              href="/app/hub"
+              className="flex items-center h-12 px-2 mb-1"
+              aria-label="BrickAI"
             >
-              <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
-              <span className={`text-sm text-white/90 ${labelClass("/app/profile")}`}>Profile</span>
+              <Image src="/favicon.png" alt="BrickAI" width={28} height={28} className="w-7 h-7" />
+              <span
+                className={
+                  collapsed === false
+                    ? "inline ml-2 text-sm font-semibold"
+                    : collapsed === true
+                    ? "hidden"
+                    : `hidden md:inline lg:hidden ${allowHoverExpand ? "group-hover:lg:inline" : ""} ml-2 text-sm font-semibold`
+                }
+              >
+                BrickAI
+              </span>
             </Link>
+            <nav className="flex flex-col gap-1">
+              <NavLinks items={primaryNav} />
+            </nav>
           </div>
-        </div>
-        
+          <div className="px-2 pb-2">
+            <div className="flex items-center gap-1">
+              <Link
+                href="/app/profile"
+                aria-label="Profile"
+                className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2"
+              >
+                <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
+                <span className={`text-sm text-white/90 ${labelClass("/app/profile")}`}>Profile</span>
+              </Link>
+            </div>
+          </div>
         </aside>
         {/* Toggle button outside the sidebar, poking out on the right */}
         <button

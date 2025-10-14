@@ -241,6 +241,27 @@ export function useAuth(): UseAuthReturn {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // If returning from a magic link (email OTP), exchange the code for a session
+        if (typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get("code");
+          if (code) {
+            try {
+              await supabase.auth.exchangeCodeForSession(code);
+            } catch (ex) {
+              console.error("Failed to exchange email code:", ex);
+            } finally {
+              // Clean the URL to avoid re-exchanging on next render
+              try {
+                params.delete("code");
+                const newQuery = params.toString();
+                const cleanUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ""}${window.location.hash}`;
+                window.history.replaceState({}, "", cleanUrl);
+              } catch {}
+            }
+          }
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         // Validate token against server user
         if (session?.access_token) {

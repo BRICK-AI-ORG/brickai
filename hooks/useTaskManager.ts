@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Task } from "@/types/models";
+import { Task, TaskImage } from "@/types/models";
 import { createBrowserClient } from '@supabase/ssr'
 import {
   TaskState,
@@ -26,6 +26,8 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [images, setImages] = useState<TaskImage[]>([]);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +49,13 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
         if (error) throw error;
         setTask(task);
         setDate(task.due_date ? new Date(task.due_date) : undefined);
+        // fetch images for this task
+        const { data: imgs } = await supabase
+          .from("task_images")
+          .select("image_id, task_id, path, created_at")
+          .eq("task_id", taskId)
+          .order("created_at", { ascending: true });
+        setImages(imgs || []);
       } catch (error: any) {
         console.error(`Error fetching task ID ${taskId}:`, error);
         setError(error.message);
@@ -81,6 +90,7 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
         completed: taskData.completed ?? false,
         status: nextStatus as any,
         label: (taskData as any).label,
+        priority: (taskData as any).priority ?? 'medium',
         // Allow image_url to be updated via internal flows (upload/remove)
         image_url: (taskToSave as any)?.image_url ?? task?.image_url ?? null,
         // Preserve association if provided (no user_id changes)
@@ -102,6 +112,18 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     }
   };
 
+  const signImagePath = async (path: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("task-attachments")
+        .createSignedUrl(path, 60 * 60);
+      if (error) throw error;
+      return data.signedUrl;
+    } catch {
+      return "";
+    }
+  };
+
   const uploadImage = async (file: File) => {
     try {
       if (file.size > MAX_FILE_SIZE) {
@@ -110,20 +132,23 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
 
       if (!task) throw new Error("No task found");
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${task.user_id}/${task.task_id}.${fileExt}`;
+      // Multi-image support: append new image if under 5
+      if (images.length >= 5) throw new Error("Max 5 images per task");
+      const ext = file.name.split(".").pop();
+      const path = `${task.user_id}/${task.task_id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("task-attachments")
-        .upload(fileName, file, {
-          upsert: true,
-          contentType: file.type,
-        });
-
+        .upload(path, file, { upsert: false, contentType: file.type });
       if (uploadError) throw uploadError;
-
-      const updatedTask = { ...task, image_url: fileName };
-      setTask(updatedTask);
-      await saveTask(updatedTask);
+      const { data: row, error: insErr } = await supabase
+        .from("task_images")
+        .insert({ task_id: task.task_id, path })
+        .select("image_id, task_id, path, created_at")
+        .single();
+      if (insErr) throw insErr;
+      setImages((prev) => [...prev, row!]);
+      const signed = await signImagePath(path);
+      setSignedUrls((prev) => ({ ...prev, [row!.image_id]: signed }));
     } catch (error: any) {
       console.error("Error uploading image:", error);
       setError(error.message);
@@ -174,6 +199,43 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Multi-image helpers
+  const listImages = async (tid: string) => {
+    const { data } = await supabase
+      .from("task_images")
+      .select("image_id, task_id, path, created_at")
+      .eq("task_id", tid)
+      .order("created_at", { ascending: true });
+    setImages(data || []);
+    const mapping: Record<string, string> = {};
+    await Promise.all(
+      (data || []).map(async (it) => {
+        mapping[it.image_id] = await signImagePath(it.path);
+      })
+    );
+    setSignedUrls(mapping);
+  };
+
+  const uploadImages = async (files: File[]) => {
+    for (const f of files.slice(0, Math.max(0, 5 - images.length))) {
+      await uploadImage(f);
+    }
+  };
+
+  const removeImageById = async (imageId: string) => {
+    const img = images.find((i) => i.image_id === imageId);
+    if (!img) return;
+    await supabase.storage.from("task-attachments").remove([img.path]).catch(() => {});
+    const { error } = await supabase.from("task_images").delete().eq("image_id", imageId);
+    if (error) throw error;
+    setImages((prev) => prev.filter((i) => i.image_id !== imageId));
+    setSignedUrls((prev) => {
+      const c = { ...prev } as any;
+      delete c[imageId];
+      return c;
+    });
   };
 
   const createTask = async (title: string, description: string) => {
@@ -262,6 +324,8 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     date,
     error,
     isLoading,
+    images,
+    signedUrls,
 
     // Single task operations
     setDate,
@@ -269,6 +333,9 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     saveTask,
     uploadImage,
     removeImage,
+    uploadImages,
+    listImages,
+    removeImageById,
 
     // Task list operations
     createTask,

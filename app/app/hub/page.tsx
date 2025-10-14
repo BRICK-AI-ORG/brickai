@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePortfolioManager } from "@/hooks/usePortfolioManager";
 import { PortfolioCard } from "@/components/PortfolioCard";
@@ -18,10 +18,41 @@ import {
 import FunLoader from "@/components/FunLoader";
 
 export default function HubPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { items, loading, createTask, deleteTask, toggleTaskComplete, createPortfolio, updatePortfolio, deletePortfolioWithPassword } =
+  const { items, loading, createTask, deleteTask, toggleTaskComplete, createPortfolio, updatePortfolio, deletePortfolioWithPassword, deletePortfolio } =
     usePortfolioManager();
+
+  // If a Google user initiated a delete and then confirmed via email link,
+  // complete the deletion automatically on return to the hub.
+  useEffect(() => {
+    if (loading) return;
+    if (typeof window === "undefined") return;
+    const pendingId = window.localStorage.getItem("brickai.pendingDeletePortfolio");
+    const pendingAt = window.localStorage.getItem("brickai.pendingDeleteSetAt");
+    if (!pendingId || !pendingAt) return;
+
+    const lastSignInAt = session?.user?.last_sign_in_at;
+    if (!lastSignInAt) return; // no recent sign-in detected
+
+    const last = new Date(lastSignInAt).getTime();
+    const setAt = new Date(pendingAt).getTime();
+    // Require a fresh sign-in strictly after the request time (with small skew)
+    if (!(last > setAt + 1000)) return;
+
+    (async () => {
+      try {
+        await deletePortfolio(pendingId);
+      } catch (err) {
+        console.error("Auto-deletion failed:", err);
+      } finally {
+        try {
+          window.localStorage.removeItem("brickai.pendingDeletePortfolio");
+          window.localStorage.removeItem("brickai.pendingDeleteSetAt");
+        } catch {}
+      }
+    })();
+  }, [loading, session?.user?.last_sign_in_at, deletePortfolio]);
 
   const handleCreatePortfolio = async (name: string, description: string | null) => {
     await createPortfolio(name, description ?? undefined);

@@ -41,19 +41,20 @@ export type Database = {
       }
       tasks: {
         Row: {
-          completed: boolean | null
+          completed: boolean
           created_at: string | null
           description: string | null
           due_date: string | null
           image_url: string | null
           label: string | null
-          status: string | null
+          priority: string
+          status: string
           rank: number | null
           portfolio_id: string | null
           task_id: string
           title: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           completed?: boolean | null
@@ -62,6 +63,7 @@ export type Database = {
           due_date?: string | null
           image_url?: string | null
           label?: string | null
+          priority?: string | null
           status?: string | null
           rank?: number | null
           portfolio_id?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           due_date?: string | null
           image_url?: string | null
           label?: string | null
+          priority?: string | null
           status?: string | null
           rank?: number | null
           portfolio_id?: string | null
@@ -100,6 +103,35 @@ export type Database = {
             referencedRelation: "portfolios"
             referencedColumns: ["portfolio_id"]
           },
+        ]
+      }
+      task_images: {
+        Row: {
+          image_id: string
+          task_id: string
+          path: string
+          created_at: string | null
+        }
+        Insert: {
+          image_id?: string
+          task_id: string
+          path: string
+          created_at?: string | null
+        }
+        Update: {
+          image_id?: string
+          task_id?: string
+          path?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_images_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["task_id"]
+          }
         ]
       }
       portfolios: {
