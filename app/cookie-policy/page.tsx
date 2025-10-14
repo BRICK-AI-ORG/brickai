@@ -1,8 +1,11 @@
 // server component; static content
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { PolicyBackToTop } from "@/components/PolicyBackToTop";
 
 export default function CookiePolicyPage() {
+  const scrollContainerId = "cookie-policy-scroll";
+
   return (
     <section className="pt-10 pb-6">
       <div className="mx-auto max-w-[1000px] space-y-6">
@@ -11,9 +14,9 @@ export default function CookiePolicyPage() {
           <p className="mt-3 text-muted-foreground">How BrickAI uses cookies and similar technologies</p>
         </header>
 
-        <Card className="rounded-2xl border-[#aa2ee2]/40 bg-white/[0.03] hover:border-[#aa2ee2]/50 transition-colors">
-          <CardContent className="p-4 sm:p-6">
-            <div className="max-h-[70vh] overflow-y-auto pr-2 scrollbox">
+        <Card className="rounded-2xl border border-[#aa2ee2]/35 bg-[#171717] shadow-lg">
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-4 h-[70vh]">
+            <div id={scrollContainerId} className="flex-1 overflow-y-auto pr-2 scrollbox">
               <article className="prose prose-invert prose-sm sm:prose-base max-w-none prose-headings:text-white prose-headings:font-semibold prose-p:leading-relaxed prose-li:my-1 prose-li:marker:text-[#aa2ee2]/60 prose-a:text-[#aa2ee2] hover:prose-a:text-[#77e5f2] prose-hr:border-white/10 prose-h2:mt-6 prose-h2:mb-2 prose-h3:mt-5 prose-h3:mb-1 prose-h2:scroll-mt-24">
                 <h3 className="text-white/80">Contents</h3>
                 <ul>
@@ -45,14 +48,14 @@ export default function CookiePolicyPage() {
                 <p>
                   We may update this policy as our use of cookies evolves. We will post updates on this page.
                 </p>
-                <div className="not-prose mt-3 rounded-lg border border-[#aa2ee2]/30 bg-[#aa2ee2]/5 p-3 text-sm text-white/90">
+                <div className="not-prose mt-3 rounded-lg border border-[#aa2ee2]/40 bg-[#171717] p-3 text-sm text-white/90">
                   Tip: You can clear cookies in your browser settings. Blocking some types of cookies may impact your
                   experience on parts of the Service.
                 </div>
-                <div className="not-prose mt-6 text-right">
-                  <a href="#top" className="text-sm text-white/70 hover:text-white">Back to top</a>
-                </div>
               </article>
+            </div>
+            <div className="flex justify-end pt-2">
+              <PolicyBackToTop targetId={scrollContainerId} />
             </div>
           </CardContent>
         </Card>

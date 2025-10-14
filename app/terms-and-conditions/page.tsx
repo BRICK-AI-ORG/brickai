@@ -1,8 +1,11 @@
 // server component; static content
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { PolicyBackToTop } from "@/components/PolicyBackToTop";
 
 export default function TermsAndConditionsPage() {
+  const scrollContainerId = "terms-policy-scroll";
+
   return (
     <section className="pt-10 pb-6">
       <div className="mx-auto max-w-[1000px] space-y-6">
@@ -11,9 +14,9 @@ export default function TermsAndConditionsPage() {
           <p className="mt-3 text-muted-foreground">Please read these terms carefully before using BrickAI</p>
         </header>
 
-        <Card className="rounded-2xl border-[#aa2ee2]/40 bg-white/[0.03] hover:border-[#aa2ee2]/50 transition-colors">
-          <CardContent className="p-4 sm:p-6">
-            <div className="max-h-[70vh] overflow-y-auto pr-2 scrollbox">
+        <Card className="rounded-2xl border border-[#aa2ee2]/35 bg-[#171717] shadow-lg">
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-4 h-[70vh]">
+            <div id={scrollContainerId} className="flex-1 overflow-y-auto pr-2 scrollbox">
               <article className="prose prose-invert prose-sm sm:prose-base max-w-none prose-headings:text-white prose-headings:font-semibold prose-p:leading-relaxed prose-li:my-1 prose-li:marker:text-[#aa2ee2]/60 prose-a:text-[#aa2ee2] hover:prose-a:text-[#77e5f2] prose-hr:border-white/10 prose-h2:mt-6 prose-h2:mb-2 prose-h3:mt-5 prose-h3:mb-1 prose-h2:scroll-mt-24">
                 <h3 className="text-white/80">Contents</h3>
                 <ul>
@@ -223,6 +226,9 @@ export default function TermsAndConditionsPage() {
                   Questions about these Terms? Email <a href="mailto:hello@brickai.app">hello@brickai.app</a>.
                 </p>
               </article>
+            </div>
+            <div className="flex justify-end pt-2">
+              <PolicyBackToTop targetId={scrollContainerId} />
             </div>
           </CardContent>
         </Card>
