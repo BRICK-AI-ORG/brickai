@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Portfolio, Task } from "@/types/models";
+import {
+  emitTaskCreated,
+  emitTaskDeleted,
+  emitTaskUpdated,
+  TASK_CREATED_EVENT,
+  TASK_DELETED_EVENT,
+  TASK_UPDATED_EVENT,
+  type TaskCreatedDetail,
+  type TaskDeletedDetail,
+  type TaskUpdatedDetail,
+} from "@/lib/task-events";
 
 type PortfolioWithTasks = {
   portfolio: Portfolio;
@@ -60,6 +71,129 @@ export function usePortfolioManager() {
       setLoading(false);
     }
   }
+
+  const applyTaskCreation = (task: Task) => {
+    if (!task.portfolio_id) {
+      void fetchAll();
+      return;
+    }
+
+    let portfolioFound = false;
+    let inserted = false;
+    setItems((prev) => {
+      const next = prev.map((entry) => {
+        if (entry.portfolio.portfolio_id !== task.portfolio_id) return entry;
+        portfolioFound = true;
+        if (entry.tasks.some((t) => t.task_id === task.task_id)) {
+          return entry;
+        }
+        inserted = true;
+        return { ...entry, tasks: [task, ...entry.tasks] };
+      });
+      if (!portfolioFound || !inserted) {
+        return prev;
+      }
+      return next;
+    });
+
+    if (!portfolioFound) {
+      void fetchAll();
+    }
+  };
+
+  const applyTaskUpdate = (task: Task, previousPortfolioId?: string | null) => {
+    let updatedInTarget = false;
+    let touched = false;
+    setItems((prev) => {
+      const next = prev.map((entry) => {
+        let tasks = entry.tasks;
+
+        if (entry.portfolio.portfolio_id === task.portfolio_id) {
+          updatedInTarget = true;
+          touched = true;
+          const exists = tasks.some((t) => t.task_id === task.task_id);
+          tasks = exists
+            ? tasks.map((t) => (t.task_id === task.task_id ? { ...t, ...task } : t))
+            : [task, ...tasks];
+          return { ...entry, tasks };
+        }
+
+        if (
+          previousPortfolioId &&
+          previousPortfolioId !== task.portfolio_id &&
+          entry.portfolio.portfolio_id === previousPortfolioId
+        ) {
+          const filtered = tasks.filter((t) => t.task_id !== task.task_id);
+          if (filtered.length !== tasks.length) {
+            touched = true;
+            return { ...entry, tasks: filtered };
+          }
+        }
+
+        return entry;
+      });
+
+      return touched ? next : prev;
+    });
+
+    if (!updatedInTarget) {
+      void fetchAll();
+    }
+  };
+
+  const applyTaskDeletion = (taskId: string, portfolioId?: string | null) => {
+    let removed = false;
+    setItems((prev) => {
+      const next = prev.map((entry) => {
+        if (portfolioId && entry.portfolio.portfolio_id !== portfolioId) return entry;
+        const filtered = entry.tasks.filter((t) => t.task_id !== taskId);
+        if (filtered.length !== entry.tasks.length) {
+          removed = true;
+          return { ...entry, tasks: filtered };
+        }
+        return entry;
+      });
+
+      return removed ? next : prev;
+    });
+
+    if (!removed) {
+      void fetchAll();
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleTaskCreated = (event: Event) => {
+      const detail = (event as CustomEvent<TaskCreatedDetail>).detail;
+      if (!detail?.task) return;
+      applyTaskCreation(detail.task);
+    };
+
+    const handleTaskUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<TaskUpdatedDetail>).detail;
+      if (!detail?.task) return;
+      applyTaskUpdate(detail.task, detail.previousPortfolioId);
+    };
+
+    const handleTaskDeleted = (event: Event) => {
+      const detail = (event as CustomEvent<TaskDeletedDetail>).detail;
+      if (!detail) return;
+      applyTaskDeletion(detail.taskId, detail.portfolioId);
+    };
+
+    window.addEventListener(TASK_CREATED_EVENT, handleTaskCreated as EventListener);
+    window.addEventListener(TASK_UPDATED_EVENT, handleTaskUpdated as EventListener);
+    window.addEventListener(TASK_DELETED_EVENT, handleTaskDeleted as EventListener);
+
+    return () => {
+      window.removeEventListener(TASK_CREATED_EVENT, handleTaskCreated as EventListener);
+      window.removeEventListener(TASK_UPDATED_EVENT, handleTaskUpdated as EventListener);
+      window.removeEventListener(TASK_DELETED_EVENT, handleTaskDeleted as EventListener);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function createPortfolio(name: string, description?: string | null) {
     try {
@@ -221,29 +355,70 @@ export function usePortfolioManager() {
           : it
       )
     );
+    emitTaskCreated(task!);
     return task!;
   }
 
   async function deleteTask(taskId: string) {
+    const currentTask = items.flatMap((it) => it.tasks).find((t) => t.task_id === taskId);
+
+    const { data: imageRows } = await supabase
+      .from("task_images")
+      .select("path")
+      .eq("task_id", taskId);
+
+    const removalTargets = [
+      ...(imageRows?.map((img) => img.path) ?? []),
+      ...(currentTask?.image_url ? [currentTask.image_url] : []),
+    ];
+
+    if (removalTargets.length > 0) {
+      await supabase.storage
+        .from("task-attachments")
+        .remove(removalTargets)
+        .catch(() => {});
+    }
+
+    if (imageRows && imageRows.length > 0) {
+      const { error: deleteImageRowsError } = await supabase
+        .from("task_images")
+        .delete()
+        .eq("task_id", taskId);
+      if (deleteImageRowsError) {
+        console.error("Failed to remove task image records", deleteImageRowsError);
+      }
+    }
+
     const { error } = await supabase.from("tasks").delete().eq("task_id", taskId);
     if (error) throw error;
     setItems((prev) =>
       prev.map((it) => ({ ...it, tasks: it.tasks.filter((t) => t.task_id !== taskId) }))
     );
+    emitTaskDeleted(taskId, currentTask?.portfolio_id ?? null);
   }
 
   async function toggleTaskComplete(taskId: string, completed: boolean) {
+    const currentTask = items.flatMap((it) => it.tasks).find((t) => t.task_id === taskId) ?? null;
+    const updatedAt = new Date().toISOString();
     const { error } = await supabase
       .from("tasks")
-      .update({ completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() })
+      .update({ completed, status: completed ? 'done' : 'todo', updated_at: updatedAt })
       .eq("task_id", taskId);
     if (error) throw error;
     setItems((prev) =>
       prev.map((it) => ({
         ...it,
-        tasks: it.tasks.map((t) => (t.task_id === taskId ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() } : t)),
+        tasks: it.tasks.map((t) =>
+          t.task_id === taskId ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: updatedAt } : t
+        ),
       }))
     );
+    if (currentTask) {
+      emitTaskUpdated(
+        { ...currentTask, completed, status: completed ? ("done" as any) : ("todo" as any), updated_at: updatedAt },
+        currentTask.portfolio_id ?? null
+      );
+    }
   }
 
   useEffect(() => {

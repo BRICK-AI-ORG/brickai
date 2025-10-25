@@ -1,19 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
 
-if (
-  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  !process.env.SUPABASE_SERVICE_KEY ||
-  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-) {
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing required Supabase environment variables");
 }
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+if (!supabaseServiceKey) {
+  throw new Error("Missing Supabase service role key for integration tests");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const supabaseServiceClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  supabaseUrl,
+  supabaseServiceKey
 );

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Task, TaskImage } from "@/types/models";
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient } from "@supabase/ssr";
 import {
   TaskState,
   TasksState,
   TaskOperations,
   TasksOperations,
 } from "@/types/taskManager";
+import { ensureSignedUrls, getCachedSignedUrl, invalidateSignedUrl } from "@/lib/signedUrlCache";
+import { emitTaskCreated, emitTaskDeleted, emitTaskUpdated } from "@/lib/task-events";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const FUNCTION_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-task-with-ai`;
@@ -55,7 +57,7 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
           .select("image_id, task_id, path, created_at")
           .eq("task_id", taskId)
           .order("created_at", { ascending: true });
-        setImages(imgs || []);
+        await hydrateImages(imgs || []);
       } catch (error: any) {
         console.error(`Error fetching task ID ${taskId}:`, error);
         setError(error.message);
@@ -78,10 +80,11 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     setTask((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
-  const saveTask = async (taskToSave?: Task) => {
+  const saveTask = async (taskToSave?: Task): Promise<Task> => {
     try {
       const taskData = taskToSave || task;
       if (!taskData) throw new Error("No task data to save");
+      const previousPortfolioId = task?.portfolio_id ?? null;
 
       const nextStatus = (taskData as any).completed ? 'done' : ((taskData as any).status ?? 'todo');
       const safeUpdate: Partial<Task> & { due_date?: string; updated_at: string } = {
@@ -99,12 +102,19 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("tasks")
         .update(safeUpdate)
-        .eq("task_id", taskData.task_id);
+        .eq("task_id", taskData.task_id)
+        .select()
+        .single();
 
       if (error) throw error;
+      const updatedTask = (data ?? taskData) as Task;
+      setTask(updatedTask);
+      setDate(updatedTask.due_date ? new Date(updatedTask.due_date) : undefined);
+      emitTaskUpdated(updatedTask, previousPortfolioId);
+      return updatedTask;
     } catch (error: any) {
       console.error("Error saving task:", error);
       setError(error.message);
@@ -112,17 +122,57 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     }
   };
 
-  const signImagePath = async (path: string) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from("task-attachments")
-        .createSignedUrl(path, 60 * 60);
-      if (error) throw error;
-      return data.signedUrl;
-    } catch {
-      return "";
+  async function hydrateImages(taskImages: TaskImage[] | null | undefined) {
+    const safeImages = taskImages ?? [];
+    setImages(safeImages);
+
+    if (!safeImages.length) {
+      setSignedUrls({});
+      return;
     }
-  };
+
+    const cachedByPath = new Map<string, string>();
+    const pendingPaths: string[] = [];
+
+    safeImages.forEach((img) => {
+      const cached = getCachedSignedUrl(img.path);
+      if (cached) {
+        cachedByPath.set(img.path, cached);
+      } else {
+        pendingPaths.push(img.path);
+      }
+    });
+
+    let fetchedByPath = new Map<string, string>();
+    if (pendingPaths.length) {
+      try {
+        fetchedByPath = await ensureSignedUrls(supabase, "task-attachments", pendingPaths);
+      } catch (err) {
+        console.error("Error generating signed urls for task images", err);
+      }
+    }
+
+    setSignedUrls((prev) => {
+      const next: Record<string, string> = {};
+      safeImages.forEach((img) => {
+        const path = img.path;
+        const cached = cachedByPath.get(path);
+        if (cached) {
+          next[img.image_id] = cached;
+          return;
+        }
+        const fetched = fetchedByPath.get(path);
+        if (fetched) {
+          next[img.image_id] = fetched;
+          return;
+        }
+        if (prev[img.image_id]) {
+          next[img.image_id] = prev[img.image_id];
+        }
+      });
+      return next;
+    });
+  }
 
   const uploadImage = async (file: File) => {
     try {
@@ -147,8 +197,15 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
         .single();
       if (insErr) throw insErr;
       setImages((prev) => [...prev, row!]);
-      const signed = await signImagePath(path);
-      setSignedUrls((prev) => ({ ...prev, [row!.image_id]: signed }));
+      try {
+        const signedMap = await ensureSignedUrls(supabase, "task-attachments", [path]);
+        const signed = signedMap.get(path);
+        if (signed) {
+          setSignedUrls((prev) => ({ ...prev, [row!.image_id]: signed }));
+        }
+      } catch (err: any) {
+        console.error("Error signing uploaded image:", err);
+      }
     } catch (error: any) {
       console.error("Error uploading image:", error);
       setError(error.message);
@@ -167,6 +224,7 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
 
       if (storageError) throw storageError;
 
+      invalidateSignedUrl(fileName);
       const updatedTask = { ...task, image_url: null };
       setTask(updatedTask);
       await saveTask(updatedTask);
@@ -208,14 +266,7 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
       .select("image_id, task_id, path, created_at")
       .eq("task_id", tid)
       .order("created_at", { ascending: true });
-    setImages(data || []);
-    const mapping: Record<string, string> = {};
-    await Promise.all(
-      (data || []).map(async (it) => {
-        mapping[it.image_id] = await signImagePath(it.path);
-      })
-    );
-    setSignedUrls(mapping);
+    await hydrateImages(data || []);
   };
 
   const uploadImages = async (files: File[]) => {
@@ -228,6 +279,7 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     const img = images.find((i) => i.image_id === imageId);
     if (!img) return;
     await supabase.storage.from("task-attachments").remove([img.path]).catch(() => {});
+    invalidateSignedUrl(img.path);
     const { error } = await supabase.from("task_images").delete().eq("image_id", imageId);
     if (error) throw error;
     setImages((prev) => prev.filter((i) => i.image_id !== imageId));
@@ -260,10 +312,12 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
 
       const taskData = await response.json();
       if (!taskData) throw new Error("No data returned from server");
+      const createdTask = taskData as Task;
 
-      setTasks([taskData, ...tasks]);
+      setTasks((prev) => [createdTask, ...prev]);
       setError(null);
-      return taskData;
+      emitTaskCreated(createdTask);
+      return createdTask;
     } catch (error: any) {
       console.error("Error creating task:", error);
       setError(error.message);
@@ -273,14 +327,16 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
 
   const deleteTask = async (taskIdToDelete: string) => {
     try {
+      const targetTask = tasks.find((t) => t.task_id === taskIdToDelete) ?? null;
       const { error } = await supabase
         .from("tasks")
         .delete()
         .eq("task_id", taskIdToDelete);
 
       if (error) throw error;
-      setTasks(tasks.filter((t) => t.task_id !== taskIdToDelete));
+      setTasks((prev) => prev.filter((t) => t.task_id !== taskIdToDelete));
       setError(null);
+      emitTaskDeleted(taskIdToDelete, targetTask?.portfolio_id ?? null);
     } catch (error: any) {
       console.error("Error deleting task:", error);
       setError(error.message);
@@ -293,18 +349,28 @@ export function useTaskManager(taskId?: string): UseTaskManagerReturn {
     completed: boolean
   ) => {
     try {
+      const targetTask = tasks.find((t) => t.task_id === taskIdToToggle) ?? null;
+      const updatedAt = new Date().toISOString();
       const { error } = await supabase
         .from("tasks")
-        .update({ completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() })
+        .update({ completed, status: completed ? 'done' : 'todo', updated_at: updatedAt })
         .eq("task_id", taskIdToToggle);
 
       if (error) throw error;
-      setTasks(
-        tasks.map((t) =>
-          t.task_id === taskIdToToggle ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: new Date().toISOString() } : t
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.task_id === taskIdToToggle
+            ? { ...t, completed, status: completed ? 'done' : 'todo', updated_at: updatedAt }
+            : t
         )
       );
       setError(null);
+      if (targetTask) {
+        emitTaskUpdated(
+          { ...targetTask, completed, status: completed ? ("done" as any) : ("todo" as any), updated_at: updatedAt } as Task,
+          targetTask.portfolio_id ?? null
+        );
+      }
     } catch (error: any) {
       console.error("Error updating task:", error);
       setError(error.message);

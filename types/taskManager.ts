@@ -11,7 +11,7 @@ export interface TaskState extends BaseState {
 export interface TaskOperations {
   setDate: (date: Date | undefined) => void;
   updateTask: (updates: Partial<Task>) => void;
-  saveTask: (taskToSave?: Task) => Promise<void>;
+  saveTask: (taskToSave?: Task) => Promise<Task>;
   uploadImage: (file: File) => Promise<void>;
   removeImage: () => Promise<void>;
   uploadImages?: (files: File[]) => Promise<void>;

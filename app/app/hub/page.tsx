@@ -20,7 +20,7 @@ import FunLoader from "@/components/FunLoader";
 export default function HubPage() {
   const { user, session } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { items, loading, createTask, deleteTask, toggleTaskComplete, createPortfolio, updatePortfolio, deletePortfolioWithPassword, deletePortfolio } =
+  const { items, loading, createTask, deleteTask, createPortfolio, updatePortfolio, deletePortfolioWithPassword, deletePortfolio } =
     usePortfolioManager();
 
   // If a Google user initiated a delete and then confirmed via email link,
@@ -60,7 +60,7 @@ export default function HubPage() {
   };
 
   return (
-    <div>
+    <div className="pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-3xl font-bold">Your Hub</h1>
@@ -96,13 +96,10 @@ export default function HubPage() {
               key={portfolio.portfolio_id}
               portfolio={portfolio}
               tasks={tasks}
-              onCreateTask={async (pid, title, description) => {
-                await createTask(pid, title, description);
+              onCreateTask={async (pid, title, description, options) => {
+                await createTask(pid, title, description, options);
               }}
               onDeleteTask={async (taskId) => deleteTask(taskId)}
-              onToggleComplete={async (taskId, completed) =>
-                toggleTaskComplete(taskId, completed)
-              }
               onEditPortfolio={updatePortfolio}
               onDeletePortfolio={async (id, password) => deletePortfolioWithPassword(id, password)}
             />

@@ -8,7 +8,7 @@
   - If the current `image_url` differs, attempts to copy the object to the new path, then deletes the old object.
 
   Requirements:
-  - env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY
+  - env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY (or SUPABASE_SERVICE_ROLE_KEY)
   - Run: node scripts/move-storage-objects.mjs
 */
 
@@ -17,15 +17,18 @@ import { createClient } from '@supabase/supabase-js'
 
 const BUCKET = 'task-attachments'
 
-function requireEnv(name) {
-  const v = process.env[name]
-  if (!v) throw new Error(`Missing env: ${name}`)
-  return v
+function requireEnv(...names) {
+  for (const name of names) {
+    const value = process.env[name]
+    if (value) return value
+  }
+  const display = names.join(' or ')
+  throw new Error(`Missing env: ${display}`)
 }
 
 async function main() {
-  const url = requireEnv('NEXT_PUBLIC_SUPABASE_URL')
-  const serviceKey = requireEnv('SUPABASE_SERVICE_KEY')
+  const url = requireEnv('NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL')
+  const serviceKey = requireEnv('SUPABASE_SERVICE_KEY', 'SUPABASE_SERVICE_ROLE_KEY')
 
   const supabase = createClient(url, serviceKey)
 
@@ -80,4 +83,3 @@ main().catch((e) => {
   console.error('Fatal:', e)
   process.exit(1)
 })
-

@@ -5,13 +5,14 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
 import { PlusCircle, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,6 @@ interface PortfolioCardProps {
     options?: { dueDate?: string | null; imageFiles?: File[] | null; priority?: string | null }
   ) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
-  onToggleComplete: (taskId: string, completed: boolean) => Promise<void>;
   onEditPortfolio?: (
     id: string,
     updates: { name?: string; description?: string | null }
@@ -36,23 +36,28 @@ interface PortfolioCardProps {
   onDeletePortfolio?: (id: string, password: string) => Promise<void>;
 }
 
+const LARGE_DIALOG_CONTENT_CLASS =
+  "max-w-[95vw] sm:max-w-[720px] md:max-w-[864px] lg:max-w-[960px] max-h-[85vh] overflow-y-auto scrollbar-purple";
+
 export function PortfolioCard({
   portfolio,
   tasks,
   onCreateTask,
   onDeleteTask,
-  onToggleComplete,
   onEditPortfolio,
   onDeletePortfolio,
 }: PortfolioCardProps) {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [taskPanelMode, setTaskPanelMode] = useState<"view" | "edit">("view");
   const [name, setName] = useState(portfolio.name);
   const [description, setDescription] = useState(portfolio.description ?? "");
   const [pwd, setPwd] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [savingPortfolio, setSavingPortfolio] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -83,6 +88,23 @@ export function PortfolioCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!editOpen) {
+      setName(portfolio.name);
+      setDescription(portfolio.description ?? "");
+      setPwd("");
+      setDeleteError(null);
+      setSaveError(null);
+      setEmailNotice(null);
+      setEmailError(null);
+      setSavingPortfolio(false);
+    }
+  }, [
+    editOpen,
+    portfolio.description,
+    portfolio.name,
+  ]);
+
   const handleCreate = async (
     title: string,
     description: string,
@@ -98,6 +120,32 @@ export function PortfolioCard({
     setOpen(false);
   };
 
+  const handlePortfolioSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!onEditPortfolio) return;
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
+    if (!trimmedName) {
+      setSaveError("Name is required.");
+      return;
+    }
+    setSaveError(null);
+    setSavingPortfolio(true);
+    try {
+      await onEditPortfolio(portfolio.portfolio_id, {
+        name: trimmedName,
+        description: trimmedDescription ? trimmedDescription : null,
+      });
+      setEditOpen(false);
+    } catch (e: any) {
+      const message =
+        e?.message && typeof e.message === "string" ? e.message : "Failed to update portfolio.";
+      setSaveError(message);
+    } finally {
+      setSavingPortfolio(false);
+    }
+  };
+
   return (
     <div className="bg-card border rounded-md p-6 sm:p-8 space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -108,62 +156,96 @@ export function PortfolioCard({
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {onEditPortfolio && (
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
-                <Pencil className="mr-2 h-4 w-4" /> Edit
+                <PlusCircle className="mr-2 h-4 w-4" /> New Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] sm:max-w-[720px] md:max-w-[864px] lg:max-w-[960px] max-h-[85vh] overflow-y-auto scrollbar-purple">
-              <DialogHeader>
-                <DialogTitle>Edit Portfolio</DialogTitle>
-                <DialogDescription>Update the name and description.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="pname">Name</Label>
-                    <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="pdesc">Description</Label>
-                    <Textarea
-                      id="pdesc"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
-                      rows={4}
-                      maxLength={2000}
-                    />
-                    <div className="text-xs text-muted-foreground mt-1 text-right">{description.length}/2000</div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      onClick={async () => {
-                        await onEditPortfolio!(portfolio.portfolio_id, {
-                          name: name.trim(),
-                          description: description.trim() || null,
-                        });
-                        setEditOpen(false);
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </div>
-                {/* Danger zone moved here from Add Task dialog */}
-                <div className="pt-4 mt-4 border-t">
-                  <div className="text-sm font-semibold mb-2">Danger zone</div>
-                  <div className="space-y-2">
+            <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
+              <div className="space-y-6">
+                <DialogHeader>
+                  <DialogTitle>Create Task in {portfolio.name}</DialogTitle>
+                  <DialogDescription>Enter the details for your new task.</DialogDescription>
+                </DialogHeader>
+                <CreateTaskForm onSubmit={handleCreate} />
+              </div>
+            </DialogContent>
+          </Dialog>
+          {onEditPortfolio && (
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
+                <div className="space-y-6">
+                  <DialogHeader>
+                    <DialogTitle>Edit Portfolio</DialogTitle>
+                    <DialogDescription>Update the name and description.</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handlePortfolioSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="pname">Name</Label>
+                      <Input
+                        id="pname"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pdesc">Description</Label>
+                      <Textarea
+                        id="pdesc"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                        rows={4}
+                        maxLength={100}
+                      />
+                      <div className="text-xs text-muted-foreground text-right">
+                        {description.length}/100
+                      </div>
+                    </div>
+                    {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+                    <DialogFooter className="space-y-2 pt-4 sm:space-y-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        onClick={() => setEditOpen(false)}
+                        disabled={savingPortfolio}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="w-full sm:w-auto"
+                        disabled={savingPortfolio || !name.trim()}
+                      >
+                        {savingPortfolio ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                  <section className="space-y-3 rounded-md border border-destructive/20 bg-destructive/5 p-4">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Permanently delete this portfolio and its tasks.
+                      </p>
+                    </div>
                     {authProvider === "google" ? (
                       <>
                         <Label>Verify via email to delete this portfolio</Label>
                         <p className="text-sm text-muted-foreground">
-                          This account uses Google sign-in. Send a verification link to {userEmail || "your email"} and follow it, then return here.
+                          This account uses Google sign-in. Send a verification link to{" "}
+                          {userEmail || "your email"} and follow it, then return here.
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                           <Button
                             type="button"
                             variant="destructive"
+                            className="w-full sm:w-auto"
                             disabled={sendingEmail || !userEmail}
                             onClick={async () => {
                               setEmailNotice(null);
@@ -171,7 +253,6 @@ export function PortfolioCard({
                               setSendingEmail(true);
                               try {
                                 if (!userEmail) return;
-                                // mark pending delete to auto-complete after email login
                                 try {
                                   window.localStorage.setItem(
                                     "brickai.pendingDeletePortfolio",
@@ -187,7 +268,9 @@ export function PortfolioCard({
                                   options: { emailRedirectTo: `${window.location.origin}/app/hub` },
                                 });
                                 if (error) throw error;
-                                setEmailNotice(`We sent a verification link to ${userEmail}. Please check your inbox (and spam).`);
+                                setEmailNotice(
+                                  `We sent a verification link to ${userEmail}. Please check your inbox (and spam).`
+                                );
                               } catch (e: any) {
                                 const msg = e?.message || "Failed to send verification email.";
                                 setEmailError(msg);
@@ -199,12 +282,8 @@ export function PortfolioCard({
                             {sendingEmail ? "Sending..." : "Send verification email"}
                           </Button>
                         </div>
-                        {emailNotice && (
-                          <div className="text-xs text-green-600">{emailNotice}</div>
-                        )}
-                        {emailError && (
-                          <div className="text-xs text-red-600">{emailError}</div>
-                        )}
+                        {emailNotice && <div className="text-xs text-green-600">{emailNotice}</div>}
+                        {emailError && <div className="text-xs text-red-600">{emailError}</div>}
                         <p className="text-xs text-muted-foreground">
                           After you open the link and finish login, we’ll delete this portfolio automatically.
                         </p>
@@ -222,12 +301,11 @@ export function PortfolioCard({
                           }}
                           placeholder="Your account password"
                         />
-                        {deleteError && (
-                          <div className="text-xs text-red-600">{deleteError}</div>
-                        )}
-                        <div className="flex items-center gap-3">
+                        {deleteError && <div className="text-xs text-red-600">{deleteError}</div>}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <Button
                             variant="destructive"
+                            className="w-full sm:w-auto"
                             disabled={!pwd || deleting || !onDeletePortfolio}
                             onClick={async () => {
                               if (!onDeletePortfolio) return;
@@ -245,53 +323,82 @@ export function PortfolioCard({
                               }
                             }}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" /> {deleting ? "Deleting..." : "Delete Portfolio"}
+                            <Trash2 className="mr-2 h-4 w-4" />{" "}
+                            {deleting ? "Deleting..." : "Delete Portfolio"}
                           </Button>
                         </div>
                       </>
                     )}
-                  </div>
+                  </section>
                 </div>
               </DialogContent>
             </Dialog>
           )}
         </div>
       </div>
-      {/* Add Task button on its own line, smaller */}
-      <div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="mt-1">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="w-[95vw] sm:max-w-[720px] md:max-w-[864px] lg:max-w-[960px] max-h-[85vh] overflow-y-auto scrollbar-purple">
-            <DialogHeader>
-              <DialogTitle>Create Task in {portfolio.name}</DialogTitle>
-              <DialogDescription>Enter the details for your new task.</DialogDescription>
-            </DialogHeader>
-            <CreateTaskForm onSubmit={handleCreate} />
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="bg-card border rounded-md">
+      <div className="bg-transparent">
         <TaskList
           tasks={tasks}
-          onDelete={onDeleteTask}
-          onToggleComplete={onToggleComplete}
-          onEdit={(taskId) => setEditingTaskId(taskId)}
+          onSelect={(taskId) => {
+            setActiveTaskId(taskId);
+            setTaskPanelMode("view");
+          }}
         />
       </div>
-      <Dialog open={!!editingTaskId} onOpenChange={(o) => !o && setEditingTaskId(null)}>
-        <DialogContent className="w-[95vw] sm:max-w-[720px] md:max-w-[864px] lg:max-w-[960px] max-h-[85vh] overflow-y-auto scrollbar-purple">
-          <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
-            <DialogDescription>Update task details and attachments.</DialogDescription>
-          </DialogHeader>
-          {editingTaskId && (
-            <TaskEditor taskId={editingTaskId} onClose={() => setEditingTaskId(null)} />
-          )}
+      <Dialog
+        open={!!activeTaskId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActiveTaskId(null);
+            setTaskPanelMode("view");
+          }
+        }}
+      >
+        <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1 pr-6">
+              <DialogTitle className="text-xl font-semibold">Task Details</DialogTitle>
+              <DialogDescription>
+                {taskPanelMode === "edit" ? "Update task information." : "Review task information."}
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2 mt-8 sm:mt-0 sm:mr-10">
+              <Button
+                type="button"
+                variant={taskPanelMode === "view" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTaskPanelMode("view")}
+              >
+                View
+              </Button>
+              <Button
+                type="button"
+                variant={taskPanelMode === "edit" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTaskPanelMode("edit")}
+              >
+                Edit
+              </Button>
+            </div>
+          </div>
+          <div className="mt-5">
+            {activeTaskId && (
+              <TaskEditor
+                taskId={activeTaskId}
+                initialMode={taskPanelMode}
+                onModeChange={setTaskPanelMode}
+                onDeleteTask={async (taskId) => {
+                  await onDeleteTask(taskId);
+                  setActiveTaskId(null);
+                  setTaskPanelMode("view");
+                }}
+                onClose={() => {
+                  setActiveTaskId(null);
+                  setTaskPanelMode("view");
+                }}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

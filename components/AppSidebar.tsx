@@ -4,14 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, memo } from "react";
-import {
-  Menu,
-  X,
-  LayoutDashboard,
-  UserCircle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Menu, X, Home, UserCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 function NavIcon({ active }: { active: boolean }) {
   return (
@@ -28,17 +21,19 @@ const HUBBAR_STATE_KEY = "brickai.hubbarCollapsed";
 export function AppSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  // Collapsed by default across desktop breakpoints
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  // Collapsed by default; hydrate from storage when available
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const stored = window.localStorage.getItem(HUBBAR_STATE_KEY);
+      return stored === null ? true : stored !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const [textAnimation, setTextAnimation] = useState<"expand" | "collapse" | null>(null);
   const isActive = (href: string) => pathname === href;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(HUBBAR_STATE_KEY);
-    if (stored === null) return;
-    const preferredCollapsed = stored !== "false";
-    setCollapsed((prev) => (prev === preferredCollapsed ? prev : preferredCollapsed));
-  }, []);
+  const toggleLabelReady = !collapsed && textAnimation === null;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -55,26 +50,46 @@ export function AppSidebar() {
       if (event.key !== HUBBAR_STATE_KEY) return;
       if (event.storageArea !== window.localStorage) return;
       const nextCollapsed = event.newValue !== "false";
-      setCollapsed((prev) => (prev === nextCollapsed ? prev : nextCollapsed));
+      setCollapsed((prev) => {
+        if (prev === nextCollapsed) return prev;
+        setTextAnimation(nextCollapsed ? "collapse" : "expand");
+        return nextCollapsed;
+      });
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  const primaryNav = useMemo(
-    () => [
-      { href: "/app/hub", label: "Hub", Icon: LayoutDashboard },
-    ],
-    []
-  );
+  useEffect(() => {
+    if (!textAnimation) return;
+    if (typeof window === "undefined") return;
+    const timer = window.setTimeout(() => setTextAnimation(null), 240);
+    return () => window.clearTimeout(timer);
+  }, [textAnimation]);
 
-  const widthClass = collapsed ? "w-16" : "w-56";
-  const allowHoverExpand = collapsed !== false; // expand on hover when collapsed
+  const primaryNav = useMemo(() => [{ href: "/app/hub", label: "Hub", Icon: Home }], []);
 
-  const labelClass = (href: string) => {
-    if (!collapsed) return "inline ml-2";
-    // collapsed: reveal labels on hover at large screens
-    return `${allowHoverExpand ? "hidden lg:group-hover:inline" : "hidden"} ml-2`;
+  const widthClass = collapsed ? "w-16" : "w-60";
+
+  const renderNavLabel = (label: string, showLabels: boolean) => {
+    if (showLabels) {
+      return <span className="text-sm text-white/90">{label}</span>;
+    }
+    if (collapsed && textAnimation === null) return null;
+    return (
+      <span
+        className="text-sm text-white/90 sidebar-label"
+        data-collapsed={collapsed ? "true" : "false"}
+        data-animation={textAnimation ?? undefined}
+      >
+        <span className="sidebar-label__text">{label}</span>
+      </span>
+    );
+  };
+
+  const handleToggle = () => {
+    setTextAnimation(collapsed ? "expand" : "collapse");
+    setCollapsed((value) => !value);
   };
 
   const NavLinks = ({ items, onClick, showLabels = false }: { items: { href: string; label: string; Icon: any }[]; onClick?: () => void; showLabels?: boolean }) => (
@@ -84,12 +99,12 @@ export function AppSidebar() {
           key={href}
           href={href}
           aria-label={label}
-          className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
+          className="relative flex items-center gap-2 h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
           onClick={onClick}
         >
           <NavIcon active={isActive(href)} />
           <Icon className={`h-7 w-7 shrink-0 ${isActive(href) ? "text-white" : "text-white/80"}`} />
-          <span className={`text-sm text-white/90 ${showLabels ? "inline ml-2" : labelClass(href)}`}>{label}</span>
+          {renderNavLabel(label, showLabels)}
         </Link>
       ))}
     </>
@@ -120,11 +135,12 @@ export function AppSidebar() {
               <Link
                 href="/app/profile"
                 aria-label="Profile"
-                className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
+                className="relative flex items-center gap-2 h-10 w-full rounded-md hover:bg-white/10 px-2 touch-manipulation"
                 onClick={() => setMobileOpen(false)}
               >
+                <NavIcon active={isActive("/app/profile")} />
                 <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
-                <span className="text-sm text-white/90 inline ml-2">Profile</span>
+                {renderNavLabel("Profile", true)}
               </Link>
             </div>
             <style jsx>{`
@@ -137,63 +153,112 @@ export function AppSidebar() {
       {/* Tablet/Desktop pinned sidebar with hover/toggle expansion */}
       <div className="relative hidden md:block shrink-0 sticky top-0 self-start z-40">
         <aside
-          className={`group flex flex-col justify-between ${widthClass} ${
-            allowHoverExpand ? "lg:hover:w-56" : ""
-          } transition-[width] duration-200 bg-[#171717] border-r border-white/10 px-2 py-2 h-[100dvh] overflow-y-auto overflow-x-hidden`}
+          className={`flex flex-col ${widthClass} transition-[width] duration-200 bg-[#171717] border-r border-white/10 px-3 py-3 h-[100dvh] overflow-y-auto overflow-x-hidden`}
           aria-label="Hubbar"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
         >
-          <div>
-            <Link
-              href="/app/hub"
-              className="flex items-center h-12 px-2 mb-1"
-              aria-label="BrickAI"
+          <div className="mb-3">
+            <button
+              type="button"
+              className={`inline-flex w-full items-center gap-2 rounded-md border border-white/10 bg-transparent px-2.5 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 ${collapsed ? "justify-center" : "justify-start"}`}
+              onClick={handleToggle}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
             >
-              <Image src="/favicon.png" alt="BrickAI" width={28} height={28} className="w-7 h-7" />
-              <span
-                className={
-                  collapsed === false
-                    ? "inline ml-2 text-sm font-semibold"
-                    : collapsed === true
-                    ? "hidden"
-                    : `hidden md:inline lg:hidden ${allowHoverExpand ? "group-hover:lg:inline" : ""} ml-2 text-sm font-semibold`
-                }
-              >
-                BrickAI
-              </span>
-            </Link>
-            <nav className="flex flex-col gap-1">
-              <NavLinks items={primaryNav} />
-            </nav>
+              {collapsed ? (
+                <>
+                  <ChevronRight className="h-5 w-5 text-white/70" />
+                  <span className="sr-only">Open Sidebar</span>
+                </>
+              ) : (
+                <>
+                  <ChevronLeft className="h-5 w-5 text-white/70" />
+                  <span
+                    className={`text-sm font-semibold transition-opacity duration-150 ${toggleLabelReady ? "opacity-100" : "opacity-0"}`}
+                    aria-hidden={!toggleLabelReady}
+                  >
+                    Close Sidebar
+                  </span>
+                  <span className="sr-only">Close Sidebar</span>
+                </>
+              )}
+            </button>
           </div>
-          <div className="px-2 pb-2">
+          <nav className="flex flex-col gap-1">
+            <NavLinks items={primaryNav} />
+          </nav>
+          <div className="pb-2 mt-auto">
             <div className="flex items-center gap-1">
               <Link
                 href="/app/profile"
                 aria-label="Profile"
-                className="relative flex items-center h-10 w-full rounded-md hover:bg-white/10 px-2"
+                className="relative flex items-center gap-2 h-10 w-full rounded-md hover:bg-white/10 px-2"
               >
+                <NavIcon active={isActive("/app/profile")} />
                 <UserCircle className={`h-7 w-7 shrink-0 ${isActive("/app/profile") ? "text-white" : "text-white/80"}`} />
-                <span className={`text-sm text-white/90 ${labelClass("/app/profile")}`}>Profile</span>
+                {renderNavLabel("Profile", false)}
               </Link>
             </div>
           </div>
         </aside>
-        {/* Toggle button outside the sidebar, poking out on the right */}
-        <button
-          type="button"
-          aria-label={collapsed ? "Expand hubbar" : "Collapse hubbar"}
-          aria-expanded={collapsed === false}
-          onClick={() => setCollapsed((v) => !v)}
-          className="absolute top-1/2 -translate-y-1/2 left-full -ml-px inline-flex items-center justify-center h-10 w-7 rounded-r-md border border-white/15 bg-white/5 hover:bg-white/10 text-white/90 shadow-sm z-50 pointer-events-auto"
-          title={collapsed ? "Expand" : "Collapse"}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </button>
+        <style jsx>{`
+          .sidebar-label {
+            display: inline-flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition:
+              max-width 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 180ms ease-in-out;
+          }
+
+          .sidebar-label > .sidebar-label__text {
+            display: inline-block;
+            will-change: clip-path;
+          }
+
+          .sidebar-label[data-collapsed="false"],
+          .sidebar-label[data-animation] {
+            visibility: visible;
+          }
+
+          .sidebar-label[data-collapsed="false"],
+          .sidebar-label[data-animation="expand"],
+          .sidebar-label[data-animation="collapse"] {
+            max-width: 16rem;
+            opacity: 1;
+          }
+
+          .sidebar-label[data-animation="expand"] > .sidebar-label__text {
+            animation: sidebar-text-reveal 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          }
+
+          .sidebar-label[data-animation="collapse"] > .sidebar-label__text {
+            animation: sidebar-text-hide 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          }
+
+          @keyframes sidebar-text-reveal {
+            from {
+              clip-path: inset(0 100% 0 0);
+            }
+            to {
+              clip-path: inset(0 0 0 0);
+            }
+          }
+
+          @keyframes sidebar-text-hide {
+            from {
+              clip-path: inset(0 0 0 0);
+            }
+            to {
+              clip-path: inset(0 100% 0 0);
+            }
+          }
+
+        `}</style>
       </div>
     </>
   );

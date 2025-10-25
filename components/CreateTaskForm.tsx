@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { priorityAppearanceList } from "@/components/task-priority";
+import { SuggestionTicker } from "@/components/SuggestionTicker";
 
 interface CreateTaskFormProps {
   onSubmit: (
@@ -32,6 +34,7 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState<string>("");
   const [dueDateObj, setDueDateObj] = useState<Date | undefined>(undefined);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [priority, setPriority] = useState<string>("medium");
@@ -71,22 +74,32 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
           required
         />
       </div>
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
-          maxLength={2000}
-          placeholder="Enter task description"
-          rows={4}
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+            maxLength={100}
+            placeholder="Enter task description"
+            rows={4}
+          />
+          <div className="text-xs text-muted-foreground mt-1 text-right">{description.length}/100</div>
+        </div>
+        <SuggestionTicker
+          suggestions={[
+            "Add contractor details for on-site work.",
+            "Set a reminder to follow up with your client.",
+            "Attach budget estimates or quotes.",
+            "Tag this task with a location or building phase.",
+          ]}
         />
-        <div className="text-xs text-muted-foreground mt-1 text-right">{description.length}/2000</div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <Label>Due Date</Label>
-          <Popover>
+          <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -109,6 +122,7 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
                 onSelect={(d) => {
                   setDueDateObj(d ?? undefined);
                   setDueDate(d ? d.toISOString().slice(0, 10) : "");
+                  if (d) setDueDateOpen(false);
                 }}
                 initialFocus
               />
@@ -145,18 +159,14 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
               <SelectValue placeholder="Select priority" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="urgent">
-                <span className="text-red-600 mr-2">🔥</span> Urgent
-              </SelectItem>
-              <SelectItem value="high">
-                <span className="text-orange-600 mr-2">⚠️</span> High
-              </SelectItem>
-              <SelectItem value="medium">
-                <span className="text-amber-600 mr-2">➖</span> Medium
-              </SelectItem>
-              <SelectItem value="low">
-                <span className="text-gray-600 mr-2">💤</span> Low
-              </SelectItem>
+              {priorityAppearanceList.map(({ value, label, Icon, iconClass }) => (
+                <SelectItem key={value} value={value}>
+                  <div className="flex items-center">
+                    <Icon className={`mr-2 h-4 w-4 ${iconClass}`} aria-hidden />
+                    <span>{label}</span>
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -168,7 +178,7 @@ export function CreateTaskForm({ onSubmit }: CreateTaskFormProps) {
         }
       `}</style>
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating..." : "Create Task"}
+        {isSubmitting ? "Creating..." : "Add Task To Portfolio"}
       </Button>
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
     </form>

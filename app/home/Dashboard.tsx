@@ -17,7 +17,7 @@ import { CreatePortfolioForm } from "@/components/CreatePortfolioForm";
 
 export default function Dashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { items, loading, createTask, deleteTask, toggleTaskComplete, createPortfolio } =
+  const { items, loading, createTask, deleteTask, createPortfolio } =
     usePortfolioManager();
 
   const handleCreatePortfolio = async (name: string, description: string | null) => {
@@ -56,13 +56,10 @@ export default function Dashboard() {
               key={portfolio.portfolio_id}
               portfolio={portfolio}
               tasks={tasks}
-              onCreateTask={async (pid, title, description) => {
-                await createTask(pid, title, description);
+              onCreateTask={async (pid, title, description, options) => {
+                await createTask(pid, title, description, options);
               }}
               onDeleteTask={async (taskId) => deleteTask(taskId)}
-              onToggleComplete={async (taskId, completed) =>
-                toggleTaskComplete(taskId, completed)
-              }
             />
           ))}
         </div>
