@@ -572,11 +572,7 @@ export default function TaskEditor({
 
         <DialogFooter className="pt-4">
           {isEditing && (
-            <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
-              <Button type="submit" className="w-full sm:w-auto">
-                <Save className="mr-2 h-4 w-4" aria-hidden />
-                Save Changes
-              </Button>
+            <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"
@@ -586,6 +582,10 @@ export default function TaskEditor({
               >
                 <Trash2 className="mr-2 h-4 w-4" aria-hidden />
                 Delete Task
+              </Button>
+              <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
+                <Save className="mr-2 h-4 w-4" aria-hidden />
+                Save Changes
               </Button>
             </div>
           )}
