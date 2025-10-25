@@ -568,7 +568,7 @@ export default function TaskEditor({
       <DialogFooter className="pt-4">
         {isEditing && (
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-2xl">
+            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2.5 sm:max-w-2xl">
               <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
               <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1 sm:max-w-md">
