@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Save, Trash2, Upload } from "lucide-react";
+import { CalendarIcon, Plus, Save, Trash2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { createBrowserClient } from "@supabase/ssr";
 import { SuggestionTicker } from "@/components/SuggestionTicker";
@@ -180,16 +180,21 @@ export default function TaskEditor({
     [isEditing, toast, uploadImage, uploadImages]
   );
 
-  const canUploadMore = (images?.length ?? 0) < MAX_IMAGES;
+const canUploadMore = (images?.length ?? 0) < MAX_IMAGES;
+const dropzoneDisabled = !isEditing || !canUploadMore;
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleImageUpload,
     accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
     maxFiles: Math.max(0, MAX_IMAGES - (images?.length ?? 0)),
-    noClick: !isEditing,
-    noKeyboard: !isEditing,
-    disabled: !isEditing,
+    noClick: true,
+    noKeyboard: true,
+    multiple: true,
+    disabled: dropzoneDisabled,
   });
+
+  const dropzoneRootProps = getRootProps();
+  const dropzoneInputProps = getInputProps();
 
   const handleRemoveLegacyImage = useCallback(async () => {
     if (!isEditing || !task?.image_url) return;
@@ -293,27 +298,6 @@ export default function TaskEditor({
   const completionLabel = task.completed ? "Completed" : "Not Completed";
   const completionTextClass = task.completed ? "text-emerald-500 font-semibold" : "text-muted-foreground";
 
-  const renderImageUpload = () => {
-    if (!isEditing || !canUploadMore) return null;
-    return (
-      <div
-        {...getRootProps()}
-        className={cn(
-          "flex h-32 flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/40 bg-card/40 text-sm transition",
-          isDragActive ? "border-primary bg-primary/10" : "hover:border-primary",
-          uploading ? "opacity-70" : "",
-        )}
-      >
-        <input {...getInputProps()} />
-        <Upload className="mb-2 h-5 w-5 text-muted-foreground" aria-hidden />
-        <p className="text-sm text-muted-foreground">
-          {uploading ? "Uploading..." : "Drag and drop or click to upload"}
-        </p>
-        <p className="text-xs text-muted-foreground/80">PNG, JPG or WebP up to 1MB each.</p>
-      </div>
-    );
-  };
-
   const renderAttachmentGallery = () => {
     const multiImages = images ?? [];
     const hasLegacyImage = Boolean(task.image_url && legacySignedUrl);
@@ -369,8 +353,6 @@ export default function TaskEditor({
           </div>
         )}
 
-        {renderImageUpload()}
-
         {isEditing && !canUploadMore && (
           <p className="text-xs text-muted-foreground">You have reached the {MAX_IMAGES}-attachment limit.</p>
         )}
@@ -389,7 +371,34 @@ export default function TaskEditor({
 
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <div className="flex w-full flex-col items-start gap-4 sm:w-[260px]">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40">
+          <div
+            {...(!dropzoneDisabled ? dropzoneRootProps : {})}
+            className={cn(
+              "relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40",
+              !dropzoneDisabled && "cursor-pointer transition hover:border-primary/60",
+              !dropzoneDisabled && isDragActive && "border-primary/60 bg-primary/10"
+            )}
+          >
+            {!dropzoneDisabled && <input {...dropzoneInputProps} />}
+            {isEditing && (
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className="absolute left-2 top-2 z-10 h-8 w-8 rounded-full border border-border/60 bg-background/90 text-foreground shadow-sm transition hover:bg-background disabled:opacity-60"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (!dropzoneDisabled) {
+                    open();
+                  }
+                }}
+                disabled={dropzoneDisabled || uploading}
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                <span className="sr-only">Upload image</span>
+              </Button>
+            )}
             {images && images.length > 0 ? (
               <Image
                 src={signedUrls?.[images[0].image_id] ?? "/placeholder.svg"}
