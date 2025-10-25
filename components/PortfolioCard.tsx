@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { Eye, PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -369,6 +369,7 @@ export function PortfolioCard({
                 size="sm"
                 onClick={() => setTaskPanelMode("view")}
               >
+                <Eye className="mr-2 h-4 w-4" aria-hidden />
                 View
               </Button>
               <Button
@@ -377,6 +378,7 @@ export function PortfolioCard({
                 size="sm"
                 onClick={() => setTaskPanelMode("edit")}
               >
+                <Pencil className="mr-2 h-4 w-4" aria-hidden />
                 Edit
               </Button>
             </div>

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   AlertOctagon,
   CalendarIcon,
+  Save,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -564,35 +565,33 @@ export default function TaskEditor({
         </div>
       </div>
 
-      {isEditing && (
-        <section className="rounded-md border border-destructive/30 bg-destructive/5 p-4">
-          <div className="flex items-start gap-3">
-            <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
-              <p className="text-xs text-muted-foreground">
-                Permanently delete this task. This action cannot be undone.
-              </p>
-              <Button
-                type="button"
-                variant="destructive"
-                className="mt-2"
-                onClick={handleDeleteTask}
-                disabled={deleting}
-              >
-                <Trash2 className="mr-2 h-4 w-4" aria-hidden />
-                {deleting ? "Deleting..." : "Delete Task"}
-              </Button>
+      <DialogFooter className="pt-4">
+        {isEditing && (
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button type="submit" className="w-full sm:w-auto">
+              <Save className="mr-2 h-4 w-4" aria-hidden />
+              Save Changes
+            </Button>
+            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-sm">
+              <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
+                <p className="text-xs text-muted-foreground">
+                  Permanently delete this task. This action cannot be undone.
+                </p>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="mt-2 w-full sm:w-auto"
+                  onClick={handleDeleteTask}
+                  disabled={deleting}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+                  {deleting ? "Deleting..." : "Delete Task"}
+                </Button>
+              </div>
             </div>
           </div>
-        </section>
-      )}
-
-      <DialogFooter className="space-y-2 pt-4 sm:space-y-0">
-        {isEditing && (
-          <Button type="submit" className="w-full sm:w-auto">
-            Save Changes
-          </Button>
         )}
       </DialogFooter>
     </form>
