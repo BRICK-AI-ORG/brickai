@@ -17,15 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import {
-  AlertOctagon,
-  CalendarIcon,
-  Save,
-  Trash2,
-  Upload,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, Save, Trash2, Upload } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { createBrowserClient } from "@supabase/ssr";
 import { SuggestionTicker } from "@/components/SuggestionTicker";
@@ -96,6 +97,7 @@ export default function TaskEditor({
   const [legacySignedUrl, setLegacySignedUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const setMode = useCallback(
     (next: TaskEditorMode) => {
@@ -224,11 +226,8 @@ export default function TaskEditor({
     [isEditing, saveTask, setMode, toast]
   );
 
-  const handleDeleteTask = useCallback(async () => {
+  const performDelete = useCallback(async () => {
     if (!task) return;
-    const confirmed =
-      typeof window === "undefined" ? true : window.confirm("Delete this task? This action cannot be undone.");
-    if (!confirmed) return;
     try {
       setDeleting(true);
       if (onDeleteTask) {
@@ -248,6 +247,11 @@ export default function TaskEditor({
       setDeleting(false);
     }
   }, [deleteTaskMut, onClose, onDeleteTask, task, toast]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    setDeleteConfirmOpen(false);
+    await performDelete();
+  }, [performDelete]);
 
   if (isLoading || !task) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading task...</div>;
@@ -375,7 +379,8 @@ export default function TaskEditor({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -565,37 +570,57 @@ export default function TaskEditor({
         </div>
       </div>
 
-      <DialogFooter className="pt-4">
-        {isEditing && (
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2.5 sm:max-w-2xl">
-              <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-              <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1 sm:max-w-md">
-                  <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Permanently delete this task. This action cannot be undone.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full sm:ml-8 sm:w-auto sm:shrink-0"
-                  onClick={handleDeleteTask}
-                  disabled={deleting}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" aria-hidden />
-                  {deleting ? "Deleting..." : "Delete Task"}
-                </Button>
-              </div>
+        <DialogFooter className="pt-4">
+          {isEditing && (
+            <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
+              <Button type="submit" className="w-full sm:w-auto">
+                <Save className="mr-2 h-4 w-4" aria-hidden />
+                Save Changes
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="w-full sm:w-auto"
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={deleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+                Delete Task
+              </Button>
             </div>
-            <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
-              <Save className="mr-2 h-4 w-4" aria-hidden />
-              Save Changes
+          )}
+        </DialogFooter>
+      </form>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete this task?</DialogTitle>
+            <DialogDescription>
+              This permanently removes the task and any related attachments. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
             </Button>
-          </div>
-        )}
-      </DialogFooter>
-    </form>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+              {deleting ? "Deleting..." : "Delete Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
