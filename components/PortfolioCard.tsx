@@ -26,7 +26,12 @@ interface PortfolioCardProps {
     portfolioId: string,
     title: string,
     description: string,
-    options?: { dueDate?: string | null; imageFiles?: File[] | null; priority?: string | null }
+    options?: {
+      dueDate?: string | null;
+      imageFiles?: File[] | null;
+      priority?: string | null;
+      label?: string | null;
+    }
   ) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onEditPortfolio?: (
@@ -110,12 +115,14 @@ export function PortfolioCard({
     description: string,
     dueDate?: string | null,
     imageFiles?: File[] | null,
-    priority?: string | null
+    priority?: string | null,
+    label?: string | null
   ) => {
     await onCreateTask(portfolio.portfolio_id, title, description, {
       dueDate: dueDate ?? null,
       imageFiles: imageFiles ?? null,
       priority: priority ?? null,
+      label: label ?? null,
     });
     setOpen(false);
   };
