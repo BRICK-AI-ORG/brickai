@@ -180,8 +180,8 @@ export default function TaskEditor({
     [isEditing, toast, uploadImage, uploadImages]
   );
 
-const canUploadMore = (images?.length ?? 0) < MAX_IMAGES;
-const dropzoneDisabled = !isEditing || !canUploadMore;
+  const canUploadMore = (images?.length ?? 0) < MAX_IMAGES;
+  const dropzoneDisabled = !isEditing || !canUploadMore;
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleImageUpload,
