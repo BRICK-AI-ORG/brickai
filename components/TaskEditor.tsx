@@ -570,7 +570,7 @@ export default function TaskEditor({
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-md">
               <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-              <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-1 flex-wrap items-center gap-3">
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
                   <p className="text-xs text-muted-foreground">
@@ -580,7 +580,7 @@ export default function TaskEditor({
                 <Button
                   type="button"
                   variant="destructive"
-                  className="w-full sm:w-auto"
+                  className="ml-auto sm:w-auto"
                   onClick={handleDeleteTask}
                   disabled={deleting}
                 >
