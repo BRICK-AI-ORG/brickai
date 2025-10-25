@@ -570,8 +570,8 @@ export default function TaskEditor({
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-md">
               <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-              <div className="flex flex-1 flex-wrap items-center gap-3">
-                <div className="space-y-1">
+              <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1 sm:max-w-md">
                   <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
                   <p className="text-xs text-muted-foreground">
                     Permanently delete this task. This action cannot be undone.
@@ -580,7 +580,7 @@ export default function TaskEditor({
                 <Button
                   type="button"
                   variant="destructive"
-                  className="ml-auto sm:w-auto"
+                  className="w-full sm:ml-8 sm:w-auto sm:shrink-0"
                   onClick={handleDeleteTask}
                   disabled={deleting}
                 >
