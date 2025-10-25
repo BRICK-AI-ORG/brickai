@@ -298,68 +298,6 @@ export default function TaskEditor({
   const completionLabel = task.completed ? "Completed" : "Not Completed";
   const completionTextClass = task.completed ? "text-emerald-500 font-semibold" : "text-muted-foreground";
 
-  const renderAttachmentGallery = () => {
-    const multiImages = images ?? [];
-    const hasLegacyImage = Boolean(task.image_url && legacySignedUrl);
-
-    if (!hasLegacyImage && multiImages.length === 0 && !isEditing) {
-      return <p className="text-sm text-muted-foreground">No attachments yet.</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {multiImages.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {multiImages.map((img: any) => {
-              const signed = signedUrls?.[img.image_id];
-              return (
-                <div key={img.image_id} className="relative h-36 overflow-hidden rounded-md border bg-muted/40">
-                  {signed ? (
-                    <Image src={signed} alt="Task attachment" fill className="object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                      Loading...
-                    </div>
-                  )}
-                  {isEditing && (
-                    <div className="absolute top-2 right-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        className="h-7 w-7"
-                        onClick={() => removeImageById?.(img.image_id)}
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {hasLegacyImage && (
-          <div className="relative h-40 overflow-hidden rounded-md border bg-muted/40">
-            <Image src={legacySignedUrl as string} alt="Task attachment" fill className="object-cover" />
-            {isEditing && (
-              <div className="absolute bottom-2 right-2">
-                <Button type="button" size="sm" variant="outline" onClick={handleRemoveLegacyImage}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Remove Image
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {isEditing && !canUploadMore && (
-          <p className="text-xs text-muted-foreground">You have reached the {MAX_IMAGES}-attachment limit.</p>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -414,7 +352,6 @@ export default function TaskEditor({
               </div>
             )}
           </div>
-          {renderAttachmentGallery()}
         </div>
 
         <div className="flex-1 space-y-6">
