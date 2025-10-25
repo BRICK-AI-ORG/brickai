@@ -395,8 +395,8 @@ export default function TaskEditor({
             ) : legacySignedUrl ? (
               <Image src={legacySignedUrl} alt="Task preview" fill className="object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-muted-foreground">
-                {(task.title?.charAt(0) || "T").toUpperCase()}
+              <div className="flex h-full w-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
+                No image provided.
               </div>
             )}
           </div>
