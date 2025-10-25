@@ -567,22 +567,20 @@ export default function TaskEditor({
 
       <DialogFooter className="pt-4">
         {isEditing && (
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="submit" className="w-full sm:w-auto">
-              <Save className="mr-2 h-4 w-4" aria-hidden />
-              Save Changes
-            </Button>
-            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-sm">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex w-full items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 sm:max-w-md">
               <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
-                <p className="text-xs text-muted-foreground">
-                  Permanently delete this task. This action cannot be undone.
-                </p>
+              <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Permanently delete this task. This action cannot be undone.
+                  </p>
+                </div>
                 <Button
                   type="button"
                   variant="destructive"
-                  className="mt-2 w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                   onClick={handleDeleteTask}
                   disabled={deleting}
                 >
@@ -591,6 +589,10 @@ export default function TaskEditor({
                 </Button>
               </div>
             </div>
+            <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
+              <Save className="mr-2 h-4 w-4" aria-hidden />
+              Save Changes
+            </Button>
           </div>
         )}
       </DialogFooter>
