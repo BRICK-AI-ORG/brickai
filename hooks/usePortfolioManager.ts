@@ -280,7 +280,7 @@ export function usePortfolioManager() {
     portfolioId: string,
     title: string,
     description: string,
-    options?: { dueDate?: string | null; imageFiles?: File[] | null; priority?: string | null }
+    options?: { dueDate?: string | null; imageFiles?: File[] | null; priority?: string | null; label?: string | null }
   ) {
     const {
       data: { session },
@@ -312,6 +312,9 @@ export function usePortfolioManager() {
           status: 'todo',
           user_id: session.user.id,
           portfolio_id: portfolioId,
+          priority: options?.priority ?? 'medium',
+          due_date: options?.dueDate ?? null,
+          label: options?.label ?? null,
         })
         .select()
         .single();
@@ -320,10 +323,13 @@ export function usePortfolioManager() {
     }
 
     // Optional: update due date/priority in one roundtrip
-    if (options?.dueDate || options?.priority) {
+    const shouldUpdateMetadata =
+      !!options?.dueDate || !!options?.priority || options?.label !== undefined;
+    if (shouldUpdateMetadata) {
       const updates: any = { updated_at: new Date().toISOString() };
       if (options?.dueDate) updates.due_date = options.dueDate;
       if (options?.priority) updates.priority = options.priority;
+      if (options?.label !== undefined) updates.label = options.label ?? null;
       const { data: upd, error: dueErr } = await supabase
         .from("tasks")
         .update(updates)

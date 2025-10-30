@@ -17,14 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import {
-  AlertOctagon,
-  CalendarIcon,
-  Trash2,
-  Upload,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, Plus, Save, Trash2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { createBrowserClient } from "@supabase/ssr";
 import { SuggestionTicker } from "@/components/SuggestionTicker";
@@ -95,6 +97,7 @@ export default function TaskEditor({
   const [legacySignedUrl, setLegacySignedUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const setMode = useCallback(
     (next: TaskEditorMode) => {
@@ -178,15 +181,20 @@ export default function TaskEditor({
   );
 
   const canUploadMore = (images?.length ?? 0) < MAX_IMAGES;
+  const dropzoneDisabled = !isEditing || !canUploadMore;
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleImageUpload,
     accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
     maxFiles: Math.max(0, MAX_IMAGES - (images?.length ?? 0)),
-    noClick: !isEditing,
-    noKeyboard: !isEditing,
-    disabled: !isEditing,
+    noClick: true,
+    noKeyboard: true,
+    multiple: true,
+    disabled: dropzoneDisabled,
   });
+
+  const dropzoneRootProps = getRootProps();
+  const dropzoneInputProps = getInputProps();
 
   const handleRemoveLegacyImage = useCallback(async () => {
     if (!isEditing || !task?.image_url) return;
@@ -223,11 +231,8 @@ export default function TaskEditor({
     [isEditing, saveTask, setMode, toast]
   );
 
-  const handleDeleteTask = useCallback(async () => {
+  const performDelete = useCallback(async () => {
     if (!task) return;
-    const confirmed =
-      typeof window === "undefined" ? true : window.confirm("Delete this task? This action cannot be undone.");
-    if (!confirmed) return;
     try {
       setDeleting(true);
       if (onDeleteTask) {
@@ -247,6 +252,11 @@ export default function TaskEditor({
       setDeleting(false);
     }
   }, [deleteTaskMut, onClose, onDeleteTask, task, toast]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    setDeleteConfirmOpen(false);
+    await performDelete();
+  }, [performDelete]);
 
   if (isLoading || !task) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading task...</div>;
@@ -288,93 +298,9 @@ export default function TaskEditor({
   const completionLabel = task.completed ? "Completed" : "Not Completed";
   const completionTextClass = task.completed ? "text-emerald-500 font-semibold" : "text-muted-foreground";
 
-  const renderImageUpload = () => {
-    if (!isEditing || !canUploadMore) return null;
-    return (
-      <div
-        {...getRootProps()}
-        className={cn(
-          "flex h-32 flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/40 bg-card/40 text-sm transition",
-          isDragActive ? "border-primary bg-primary/10" : "hover:border-primary",
-          uploading ? "opacity-70" : "",
-        )}
-      >
-        <input {...getInputProps()} />
-        <Upload className="mb-2 h-5 w-5 text-muted-foreground" aria-hidden />
-        <p className="text-sm text-muted-foreground">
-          {uploading ? "Uploading..." : "Drag and drop or click to upload"}
-        </p>
-        <p className="text-xs text-muted-foreground/80">PNG, JPG or WebP up to 1MB each.</p>
-      </div>
-    );
-  };
-
-  const renderAttachmentGallery = () => {
-    const multiImages = images ?? [];
-    const hasLegacyImage = Boolean(task.image_url && legacySignedUrl);
-
-    if (!hasLegacyImage && multiImages.length === 0 && !isEditing) {
-      return <p className="text-sm text-muted-foreground">No attachments yet.</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {multiImages.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {multiImages.map((img: any) => {
-              const signed = signedUrls?.[img.image_id];
-              return (
-                <div key={img.image_id} className="relative h-36 overflow-hidden rounded-md border bg-muted/40">
-                  {signed ? (
-                    <Image src={signed} alt="Task attachment" fill className="object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                      Loading...
-                    </div>
-                  )}
-                  {isEditing && (
-                    <div className="absolute top-2 right-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        className="h-7 w-7"
-                        onClick={() => removeImageById?.(img.image_id)}
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {hasLegacyImage && (
-          <div className="relative h-40 overflow-hidden rounded-md border bg-muted/40">
-            <Image src={legacySignedUrl as string} alt="Task attachment" fill className="object-cover" />
-            {isEditing && (
-              <div className="absolute bottom-2 right-2">
-                <Button type="button" size="sm" variant="outline" onClick={handleRemoveLegacyImage}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Remove Image
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {renderImageUpload()}
-
-        {isEditing && !canUploadMore && (
-          <p className="text-xs text-muted-foreground">You have reached the {MAX_IMAGES}-attachment limit.</p>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -383,7 +309,34 @@ export default function TaskEditor({
 
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <div className="flex w-full flex-col items-start gap-4 sm:w-[260px]">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40">
+          <div
+            {...(!dropzoneDisabled ? dropzoneRootProps : {})}
+            className={cn(
+              "relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40",
+              !dropzoneDisabled && "cursor-pointer transition hover:border-primary/60",
+              !dropzoneDisabled && isDragActive && "border-primary/60 bg-primary/10"
+            )}
+          >
+            {!dropzoneDisabled && <input {...dropzoneInputProps} />}
+            {isEditing && (
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className="absolute left-2 top-2 z-10 h-8 w-8 rounded-full border border-border/60 bg-background/90 text-foreground shadow-sm transition hover:bg-background disabled:opacity-60"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (!dropzoneDisabled) {
+                    open();
+                  }
+                }}
+                disabled={dropzoneDisabled || uploading}
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                <span className="sr-only">Upload image</span>
+              </Button>
+            )}
             {images && images.length > 0 ? (
               <Image
                 src={signedUrls?.[images[0].image_id] ?? "/placeholder.svg"}
@@ -394,12 +347,11 @@ export default function TaskEditor({
             ) : legacySignedUrl ? (
               <Image src={legacySignedUrl} alt="Task preview" fill className="object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-muted-foreground">
-                {(task.title?.charAt(0) || "T").toUpperCase()}
+              <div className="flex h-full w-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
+                No image provided.
               </div>
             )}
           </div>
-          {renderAttachmentGallery()}
         </div>
 
         <div className="flex-1 space-y-6">
@@ -564,37 +516,57 @@ export default function TaskEditor({
         </div>
       </div>
 
-      {isEditing && (
-        <section className="rounded-md border border-destructive/30 bg-destructive/5 p-4">
-          <div className="flex items-start gap-3">
-            <AlertOctagon className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
-              <p className="text-xs text-muted-foreground">
-                Permanently delete this task. This action cannot be undone.
-              </p>
+        <DialogFooter className="pt-4">
+          {isEditing && (
+            <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"
-                className="mt-2"
-                onClick={handleDeleteTask}
+                className="w-full sm:w-auto"
+                onClick={() => setDeleteConfirmOpen(true)}
                 disabled={deleting}
               >
                 <Trash2 className="mr-2 h-4 w-4" aria-hidden />
-                {deleting ? "Deleting..." : "Delete Task"}
+                Delete Task
+              </Button>
+              <Button type="submit" className="w-full sm:w-auto sm:ml-auto">
+                <Save className="mr-2 h-4 w-4" aria-hidden />
+                Save Changes
               </Button>
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </DialogFooter>
+      </form>
 
-      <DialogFooter className="space-y-2 pt-4 sm:space-y-0">
-        {isEditing && (
-          <Button type="submit" className="w-full sm:w-auto">
-            Save Changes
-          </Button>
-        )}
-      </DialogFooter>
-    </form>
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete this task?</DialogTitle>
+            <DialogDescription>
+              This permanently removes the task and any related attachments. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+              {deleting ? "Deleting..." : "Delete Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
