@@ -59,6 +59,7 @@ type TaskEditorProps = {
   onModeChange?: (mode: TaskEditorMode) => void;
   onDeleteTask?: (taskId: string) => Promise<void> | void;
   onClose?: () => void;
+  onTaskTitleChange?: (title: string) => void;
 };
 
 export default function TaskEditor({
@@ -67,6 +68,7 @@ export default function TaskEditor({
   onModeChange,
   onDeleteTask,
   onClose,
+  onTaskTitleChange,
 }: TaskEditorProps) {
   const {
     task,
@@ -257,6 +259,12 @@ export default function TaskEditor({
     setDeleteConfirmOpen(false);
     await performDelete();
   }, [performDelete]);
+
+  useEffect(() => {
+    if (!task) return;
+    const trimmedTitle = task.title?.trim();
+    onTaskTitleChange?.(trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : "Untitled task");
+  }, [onTaskTitleChange, task]);
 
   if (isLoading || !task) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading task...</div>;
@@ -474,7 +482,6 @@ export default function TaskEditor({
             </>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-foreground">{task.title || "Untitled task"}</h2>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {task.description?.trim() || "Keep critical context here so collaborators immediately understand the task."}
               </p>

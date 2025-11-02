@@ -56,6 +56,7 @@ export function PortfolioCard({
   const [editOpen, setEditOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [taskPanelMode, setTaskPanelMode] = useState<"view" | "edit">("view");
+  const [activeTaskTitle, setActiveTaskTitle] = useState<string>("");
   const [name, setName] = useState(portfolio.name);
   const [description, setDescription] = useState(portfolio.description ?? "");
   const [pwd, setPwd] = useState("");
@@ -152,6 +153,20 @@ export function PortfolioCard({
       setSavingPortfolio(false);
     }
   };
+
+  useEffect(() => {
+    if (!activeTaskId) {
+      setActiveTaskTitle("");
+      return;
+    }
+    const matchingTask = tasks.find((task) => task.task_id === activeTaskId);
+    if (!matchingTask) {
+      setActiveTaskTitle("Untitled task");
+      return;
+    }
+    const trimmedTitle = matchingTask.title?.trim();
+    setActiveTaskTitle(trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : "Untitled task");
+  }, [activeTaskId, tasks]);
 
   return (
     <div className="bg-card border rounded-md p-6 sm:p-8 space-y-5">
@@ -364,7 +379,9 @@ export function PortfolioCard({
         <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1 pr-6">
-              <DialogTitle className="text-xl font-semibold">Task Details</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">
+                {activeTaskTitle || "Untitled task"}
+              </DialogTitle>
               <DialogDescription>
                 {taskPanelMode === "edit" ? "Update task information." : "Review task information."}
               </DialogDescription>
@@ -405,6 +422,7 @@ export function PortfolioCard({
                   setActiveTaskId(null);
                   setTaskPanelMode("view");
                 }}
+                onTaskTitleChange={setActiveTaskTitle}
               />
             )}
           </div>
