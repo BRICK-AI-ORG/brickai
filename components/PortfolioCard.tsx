@@ -234,140 +234,141 @@ export function PortfolioCard({
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pdesc">Description</Label>
-                      <Textarea
-                        id="pdesc"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value.slice(0, 100))}
-                        rows={4}
-                        maxLength={100}
-                      />
-                      <div className="text-xs text-muted-foreground text-right">
-                        {description.length}/100
+                      <div className="relative">
+                        <Textarea
+                          id="pdesc"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                          rows={4}
+                          maxLength={100}
+                          className="resize-none pr-16 pb-6"
+                        />
+                        <span className="pointer-events-none absolute bottom-2 right-8 text-xs text-muted-foreground">
+                          {description.length}/100
+                        </span>
                       </div>
                     </div>
                     {saveError && <p className="text-sm text-red-600">{saveError}</p>}
-                    <DialogFooter className="space-y-2 pt-4 sm:space-y-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={() => setEditOpen(false)}
-                        disabled={savingPortfolio}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        className="w-full sm:w-auto"
-                        disabled={savingPortfolio || !name.trim()}
-                      >
-                        {savingPortfolio ? "Saving..." : "Save Changes"}
-                      </Button>
+                    <DialogFooter className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-end sm:gap-6">
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() => setEditOpen(false)}
+                          disabled={savingPortfolio}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="w-full sm:w-auto"
+                          disabled={savingPortfolio || !name.trim()}
+                        >
+                          {savingPortfolio ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                      <section className="w-full space-y-3 rounded-md border border-destructive/20 bg-destructive/5 p-4 sm:max-w-[420px] sm:flex-1 sm:ml-auto">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Permanently delete this portfolio and its tasks.
+                          </p>
+                        </div>
+                        {authProvider === "google" ? (
+                          <>
+                            <p className="text-xs text-muted-foreground">
+                              Send a one-time link to {userEmail || "your email"} to finish deletion.
+                            </p>
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                className="w-full"
+                                disabled={sendingEmail || !userEmail}
+                                onClick={async () => {
+                                  setEmailNotice(null);
+                                  setEmailError(null);
+                                  setSendingEmail(true);
+                                  try {
+                                    if (!userEmail) return;
+                                    try {
+                                      window.localStorage.setItem(
+                                        "brickai.pendingDeletePortfolio",
+                                        portfolio.portfolio_id
+                                      );
+                                      window.localStorage.setItem(
+                                        "brickai.pendingDeleteSetAt",
+                                        new Date().toISOString()
+                                      );
+                                    } catch {}
+                                    const { error } = await supabase.auth.signInWithOtp({
+                                      email: userEmail,
+                                      options: { emailRedirectTo: `${window.location.origin}/app/hub` },
+                                    });
+                                    if (error) throw error;
+                                    setEmailNotice(`Verification link sent to ${userEmail}.`);
+                                  } catch (e: any) {
+                                    const msg = e?.message || "Failed to send verification email.";
+                                    setEmailError(msg);
+                                  } finally {
+                                    setSendingEmail(false);
+                                  }
+                                }}
+                              >
+                                {sendingEmail ? "Sending..." : "Send verification email"}
+                              </Button>
+                            </div>
+                            {emailNotice && <div className="text-xs text-green-600">{emailNotice}</div>}
+                            {emailError && <div className="text-xs text-red-600">{emailError}</div>}
+                          </>
+                        ) : (
+                          <>
+                            <Label htmlFor="pdel" className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Confirm with password
+                            </Label>
+                            <Input
+                              id="pdel"
+                              type="password"
+                              value={pwd}
+                              onChange={(e) => {
+                                setPwd(e.target.value);
+                                if (deleteError) setDeleteError(null);
+                              }}
+                              placeholder="Account password"
+                            />
+                            {deleteError && <div className="text-xs text-red-600">{deleteError}</div>}
+                            <div className="flex flex-col gap-3">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                className="w-full"
+                                disabled={!pwd || deleting || !onDeletePortfolio}
+                                onClick={async () => {
+                                  if (!onDeletePortfolio) return;
+                                  setDeleteError(null);
+                                  setDeleting(true);
+                                  try {
+                                    await onDeletePortfolio(portfolio.portfolio_id, pwd);
+                                    setEditOpen(false);
+                                    setPwd("");
+                                  } catch (e: any) {
+                                    const msg = e?.message || "Incorrect password";
+                                    setDeleteError(msg);
+                                  } finally {
+                                    setDeleting(false);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />{" "}
+                                {deleting ? "Deleting..." : "Delete Portfolio"}
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </section>
                     </DialogFooter>
                   </form>
-                  <section className="space-y-3 rounded-md border border-destructive/20 bg-destructive/5 p-4">
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Permanently delete this portfolio and its tasks.
-                      </p>
-                    </div>
-                    {authProvider === "google" ? (
-                      <>
-                        <Label>Verify via email to delete this portfolio</Label>
-                        <p className="text-sm text-muted-foreground">
-                          This account uses Google sign-in. Send a verification link to{" "}
-                          {userEmail || "your email"} and follow it, then return here.
-                        </p>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            className="w-full sm:w-auto"
-                            disabled={sendingEmail || !userEmail}
-                            onClick={async () => {
-                              setEmailNotice(null);
-                              setEmailError(null);
-                              setSendingEmail(true);
-                              try {
-                                if (!userEmail) return;
-                                try {
-                                  window.localStorage.setItem(
-                                    "brickai.pendingDeletePortfolio",
-                                    portfolio.portfolio_id
-                                  );
-                                  window.localStorage.setItem(
-                                    "brickai.pendingDeleteSetAt",
-                                    new Date().toISOString()
-                                  );
-                                } catch {}
-                                const { error } = await supabase.auth.signInWithOtp({
-                                  email: userEmail,
-                                  options: { emailRedirectTo: `${window.location.origin}/app/hub` },
-                                });
-                                if (error) throw error;
-                                setEmailNotice(
-                                  `We sent a verification link to ${userEmail}. Please check your inbox (and spam).`
-                                );
-                              } catch (e: any) {
-                                const msg = e?.message || "Failed to send verification email.";
-                                setEmailError(msg);
-                              } finally {
-                                setSendingEmail(false);
-                              }
-                            }}
-                          >
-                            {sendingEmail ? "Sending..." : "Send verification email"}
-                          </Button>
-                        </div>
-                        {emailNotice && <div className="text-xs text-green-600">{emailNotice}</div>}
-                        {emailError && <div className="text-xs text-red-600">{emailError}</div>}
-                        <p className="text-xs text-muted-foreground">
-                          After you open the link and finish login, we’ll delete this portfolio automatically.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Label htmlFor="pdel">Confirm your password to delete this portfolio</Label>
-                        <Input
-                          id="pdel"
-                          type="password"
-                          value={pwd}
-                          onChange={(e) => {
-                            setPwd(e.target.value);
-                            if (deleteError) setDeleteError(null);
-                          }}
-                          placeholder="Your account password"
-                        />
-                        {deleteError && <div className="text-xs text-red-600">{deleteError}</div>}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <Button
-                            variant="destructive"
-                            className="w-full sm:w-auto"
-                            disabled={!pwd || deleting || !onDeletePortfolio}
-                            onClick={async () => {
-                              if (!onDeletePortfolio) return;
-                              setDeleteError(null);
-                              setDeleting(true);
-                              try {
-                                await onDeletePortfolio(portfolio.portfolio_id, pwd);
-                                setEditOpen(false);
-                                setPwd("");
-                              } catch (e: any) {
-                                const msg = e?.message || "Incorrect password";
-                                setDeleteError(msg);
-                              } finally {
-                                setDeleting(false);
-                              }
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />{" "}
-                            {deleting ? "Deleting..." : "Delete Portfolio"}
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </section>
                 </div>
               </DialogContent>
             </Dialog>
@@ -398,7 +399,7 @@ export function PortfolioCard({
       >
         <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2 pr-6">
+            <div className="space-y-2 pr-6 flex-1">
               <DialogTitle className="text-xl font-semibold">
                 {taskPanelMode === "edit" ? (
                   <>
@@ -411,7 +412,7 @@ export function PortfolioCard({
                         titleUpdaterRef.current?.(nextTitle);
                       }}
                       placeholder="Task title"
-                      className="text-xl font-semibold"
+                      className="w-full text-xl font-semibold"
                       aria-label="Task title"
                     />
                   </>
@@ -421,21 +422,23 @@ export function PortfolioCard({
               </DialogTitle>
               {taskPanelMode === "edit" ? (
                 <div className="space-y-1">
-                  <Textarea
-                    value={activeTaskDescription}
-                    onChange={(event) => {
-                      const nextDescription = event.target.value.slice(0, 100);
-                      setActiveTaskDescription(nextDescription);
-                      descriptionUpdaterRef.current?.(nextDescription);
-                    }}
-                    placeholder="Describe the work, expectations, and any additional notes."
-                    className="min-h-[120px] resize-none text-sm leading-relaxed"
-                    rows={3}
-                    maxLength={100}
-                    aria-label="Task description"
-                  />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {`${activeTaskDescription.length}/100`}
+                  <div className="relative w-full">
+                    <Textarea
+                      value={activeTaskDescription}
+                      onChange={(event) => {
+                        const nextDescription = event.target.value.slice(0, 100);
+                        setActiveTaskDescription(nextDescription);
+                        descriptionUpdaterRef.current?.(nextDescription);
+                      }}
+                      placeholder="Describe the work, expectations, and any additional notes."
+                      className="min-h-[72px] resize-none text-sm leading-relaxed pr-16 pb-6"
+                      rows={2}
+                      maxLength={100}
+                      aria-label="Task description"
+                    />
+                    <span className="pointer-events-none absolute bottom-2 right-8 text-xs text-muted-foreground">
+                      {`${activeTaskDescription.length}/100`}
+                    </span>
                   </div>
                 </div>
               ) : (

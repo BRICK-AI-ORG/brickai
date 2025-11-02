@@ -27,7 +27,6 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Plus, Save, Trash2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { createBrowserClient } from "@supabase/ssr";
-import { SuggestionTicker } from "@/components/SuggestionTicker";
 import { labels, getLabelColors, type LabelType } from "@/lib/labels";
 import { labelIconMap } from "@/components/task-label-icons";
 import { priorityAppearanceList, priorityAppearanceMap } from "@/components/task-priority";
@@ -38,16 +37,7 @@ import { ensureSignedUrl, getCachedSignedUrl } from "@/lib/signedUrlCache";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types/models";
 
-const SUGGESTIONS = [
-  "Add contractor contact details and availability.",
-  "Outline key milestones or inspection dates.",
-  "Attach progress photos for quick context.",
-  "Note any supplier dependencies or lead times.",
-];
-
 const MAX_IMAGES = 5;
-
-const EDIT_SUGGESTION_LAYOUT_CLASS = "h-full rounded-md border border-muted-foreground/30 bg-background";
 
 export type TaskEditorMode = "view" | "edit";
 
@@ -341,15 +331,24 @@ export default function TaskEditor({
 
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <div className="flex w-full flex-col items-start gap-4 sm:w-[260px]">
-          <div
+          <button
+            type="button"
             {...(!dropzoneDisabled ? dropzoneRootProps : {})}
             className={cn(
-              "relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40",
-              !dropzoneDisabled && "cursor-pointer transition hover:border-primary/60",
+              "relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted/40 transition",
+              !dropzoneDisabled && "cursor-pointer hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/50",
               !dropzoneDisabled && isDragActive && "border-primary/60 bg-primary/10"
             )}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!dropzoneDisabled) {
+                open();
+              }
+            }}
+            disabled={dropzoneDisabled || uploading}
           >
-            {!dropzoneDisabled && <input {...dropzoneInputProps} />}
+            {!dropzoneDisabled && <input {...dropzoneInputProps} className="hidden" />}
             {isEditing && (
               <Button
                 type="button"
@@ -383,14 +382,12 @@ export default function TaskEditor({
                 No image provided.
               </div>
             )}
-          </div>
+          </button>
         </div>
 
         <div className="flex-1 space-y-6">
           {isEditing ? (
             <>
-              <SuggestionTicker suggestions={SUGGESTIONS} layout="compact" className={EDIT_SUGGESTION_LAYOUT_CLASS} />
-
               <div className="flex items-center gap-2 pt-1">
                 <Checkbox
                   checked={task.completed || false}
