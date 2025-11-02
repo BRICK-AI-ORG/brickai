@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
 import { Eye, PlusCircle, Pencil, Trash2 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,8 @@ interface PortfolioCardProps {
 
 const LARGE_DIALOG_CONTENT_CLASS =
   "max-w-[95vw] sm:max-w-[720px] md:max-w-[864px] lg:max-w-[960px] max-h-[85vh] overflow-y-auto scrollbar-purple";
+const DEFAULT_TASK_DESCRIPTION =
+  "Keep critical context here so collaborators immediately understand the task.";
 
 export function PortfolioCard({
   portfolio,
@@ -57,6 +59,7 @@ export function PortfolioCard({
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [taskPanelMode, setTaskPanelMode] = useState<"view" | "edit">("view");
   const [activeTaskTitle, setActiveTaskTitle] = useState<string>("");
+  const [activeTaskDescription, setActiveTaskDescription] = useState<string>("");
   const [name, setName] = useState(portfolio.name);
   const [description, setDescription] = useState(portfolio.description ?? "");
   const [pwd, setPwd] = useState("");
@@ -69,6 +72,9 @@ export function PortfolioCard({
   const [sendingEmail, setSendingEmail] = useState(false);
   const [authProvider, setAuthProvider] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  const titleUpdaterRef = useRef<((title: string) => void) | null>(null);
+  const descriptionUpdaterRef = useRef<((description: string) => void) | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -157,16 +163,26 @@ export function PortfolioCard({
   useEffect(() => {
     if (!activeTaskId) {
       setActiveTaskTitle("");
+      setActiveTaskDescription("");
+      titleUpdaterRef.current = null;
+      descriptionUpdaterRef.current = null;
       return;
     }
     const matchingTask = tasks.find((task) => task.task_id === activeTaskId);
     if (!matchingTask) {
-      setActiveTaskTitle("Untitled task");
+      setActiveTaskTitle("");
+      setActiveTaskDescription("");
+      titleUpdaterRef.current = null;
+      descriptionUpdaterRef.current = null;
       return;
     }
-    const trimmedTitle = matchingTask.title?.trim();
-    setActiveTaskTitle(trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : "Untitled task");
+    setActiveTaskTitle(matchingTask.title ?? "");
+    setActiveTaskDescription((matchingTask.description ?? "").slice(0, 100));
   }, [activeTaskId, tasks]);
+
+  const displayTitle = activeTaskTitle.trim().length > 0 ? activeTaskTitle : "Untitled task";
+  const displayDescription =
+    activeTaskDescription.trim().length > 0 ? activeTaskDescription : DEFAULT_TASK_DESCRIPTION;
 
   return (
     <div className="bg-card border rounded-md p-6 sm:p-8 space-y-5">
@@ -373,18 +389,60 @@ export function PortfolioCard({
           if (!open) {
             setActiveTaskId(null);
             setTaskPanelMode("view");
+            setActiveTaskTitle("");
+            setActiveTaskDescription("");
+            titleUpdaterRef.current = null;
+            descriptionUpdaterRef.current = null;
           }
         }}
       >
         <DialogContent className={LARGE_DIALOG_CONTENT_CLASS}>
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1 pr-6">
+            <div className="space-y-2 pr-6">
               <DialogTitle className="text-xl font-semibold">
-                {activeTaskTitle || "Untitled task"}
+                {taskPanelMode === "edit" ? (
+                  <>
+                    <span className="sr-only">{displayTitle}</span>
+                    <Input
+                      value={activeTaskTitle}
+                      onChange={(event) => {
+                        const nextTitle = event.target.value;
+                        setActiveTaskTitle(nextTitle);
+                        titleUpdaterRef.current?.(nextTitle);
+                      }}
+                      placeholder="Task title"
+                      className="text-xl font-semibold"
+                      aria-label="Task title"
+                    />
+                  </>
+                ) : (
+                  displayTitle
+                )}
               </DialogTitle>
-              <DialogDescription>
-                {taskPanelMode === "edit" ? "Update task information." : "Review task information."}
-              </DialogDescription>
+              {taskPanelMode === "edit" ? (
+                <div className="space-y-1">
+                  <Textarea
+                    value={activeTaskDescription}
+                    onChange={(event) => {
+                      const nextDescription = event.target.value.slice(0, 100);
+                      setActiveTaskDescription(nextDescription);
+                      descriptionUpdaterRef.current?.(nextDescription);
+                    }}
+                    placeholder="Describe the work, expectations, and any additional notes."
+                    className="min-h-[120px] resize-none text-sm leading-relaxed"
+                    rows={3}
+                    maxLength={100}
+                    aria-label="Task description"
+                  />
+                  <div className="text-xs text-muted-foreground text-right">
+                    {`${activeTaskDescription.length}/100`}
+                  </div>
+                </div>
+              ) : (
+                <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                  {displayDescription}
+                </DialogDescription>
+              )}
             </div>
             <div className="flex items-center gap-2 mt-8 sm:mt-0 sm:mr-10">
               <Button
@@ -417,12 +475,25 @@ export function PortfolioCard({
                   await onDeleteTask(taskId);
                   setActiveTaskId(null);
                   setTaskPanelMode("view");
+                  setActiveTaskTitle("");
+                  setActiveTaskDescription("");
+                  titleUpdaterRef.current = null;
+                  descriptionUpdaterRef.current = null;
                 }}
                 onClose={() => {
                   setActiveTaskId(null);
                   setTaskPanelMode("view");
+                  setActiveTaskTitle("");
+                  setActiveTaskDescription("");
+                  titleUpdaterRef.current = null;
+                  descriptionUpdaterRef.current = null;
                 }}
                 onTaskTitleChange={setActiveTaskTitle}
+                onTaskDescriptionChange={setActiveTaskDescription}
+                onRegisterTaskFieldUpdaters={(handlers) => {
+                  titleUpdaterRef.current = handlers?.updateTitle ?? null;
+                  descriptionUpdaterRef.current = handlers?.updateDescription ?? null;
+                }}
               />
             )}
           </div>

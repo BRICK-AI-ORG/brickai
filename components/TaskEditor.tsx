@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -53,6 +51,11 @@ const EDIT_SUGGESTION_LAYOUT_CLASS = "h-full rounded-md border border-muted-fore
 
 export type TaskEditorMode = "view" | "edit";
 
+type TaskFieldUpdaters = {
+  updateTitle: (title: string) => void;
+  updateDescription: (description: string) => void;
+};
+
 type TaskEditorProps = {
   taskId: string;
   initialMode?: TaskEditorMode;
@@ -60,6 +63,8 @@ type TaskEditorProps = {
   onDeleteTask?: (taskId: string) => Promise<void> | void;
   onClose?: () => void;
   onTaskTitleChange?: (title: string) => void;
+  onTaskDescriptionChange?: (description: string) => void;
+  onRegisterTaskFieldUpdaters?: (handlers: TaskFieldUpdaters | null) => void;
 };
 
 export default function TaskEditor({
@@ -69,6 +74,8 @@ export default function TaskEditor({
   onDeleteTask,
   onClose,
   onTaskTitleChange,
+  onTaskDescriptionChange,
+  onRegisterTaskFieldUpdaters,
 }: TaskEditorProps) {
   const {
     task,
@@ -112,6 +119,23 @@ export default function TaskEditor({
   useEffect(() => {
     setModeState(initialMode);
   }, [initialMode, taskId]);
+
+  useEffect(() => {
+    if (!onRegisterTaskFieldUpdaters) return;
+    const handlers: TaskFieldUpdaters = {
+      updateTitle: (nextTitle) => {
+        updateTask({ title: nextTitle });
+      },
+      updateDescription: (nextDescription) => {
+        const limited = nextDescription.slice(0, 100);
+        updateTask({ description: limited });
+      },
+    };
+    onRegisterTaskFieldUpdaters(handlers);
+    return () => {
+      onRegisterTaskFieldUpdaters(null);
+    };
+  }, [onRegisterTaskFieldUpdaters, updateTask]);
 
   const isEditing = mode === "edit";
   useEffect(() => {
@@ -262,9 +286,9 @@ export default function TaskEditor({
 
   useEffect(() => {
     if (!task) return;
-    const trimmedTitle = task.title?.trim();
-    onTaskTitleChange?.(trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : "Untitled task");
-  }, [onTaskTitleChange, task]);
+    onTaskTitleChange?.(task.title ?? "");
+    onTaskDescriptionChange?.((task.description ?? "").slice(0, 100));
+  }, [onTaskDescriptionChange, onTaskTitleChange, task]);
 
   if (isLoading || !task) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading task...</div>;
@@ -365,29 +389,7 @@ export default function TaskEditor({
         <div className="flex-1 space-y-6">
           {isEditing ? (
             <>
-              <Input
-                value={task.title || ""}
-                onChange={(e) => updateTask({ title: e.target.value })}
-                placeholder="Task title"
-                className="text-lg font-semibold"
-              />
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Textarea
-                    value={task.description || ""}
-                    maxLength={100}
-                    rows={3}
-                    onChange={(e) => updateTask({ description: e.target.value.slice(0, 100) })}
-                    placeholder="Describe the work, expectations, and any additional notes."
-                    className="min-h-[120px] resize-none"
-                  />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {(task.description || "").length}/100
-                  </div>
-                </div>
-                <SuggestionTicker suggestions={SUGGESTIONS} layout="compact" className={EDIT_SUGGESTION_LAYOUT_CLASS} />
-              </div>
+              <SuggestionTicker suggestions={SUGGESTIONS} layout="compact" className={EDIT_SUGGESTION_LAYOUT_CLASS} />
 
               <div className="flex items-center gap-2 pt-1">
                 <Checkbox
@@ -482,9 +484,6 @@ export default function TaskEditor({
             </>
           ) : (
             <>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {task.description?.trim() || "Keep critical context here so collaborators immediately understand the task."}
-              </p>
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={task.completed || false}
